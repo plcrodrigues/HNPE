@@ -28,9 +28,9 @@ if __name__ == "__main__":
             parameters["mu"] = theta[1]
             parameters["sigma"] = theta[2]
             parameters["gain"] = theta[3]
-            case = f"JRNMM_nextra_{parameters['nextra']}"
+            case = f"JRNMM_nextra_{nextra}"
             for key in parameters.keys():
-                case = "_".join([case, key, str(parameters[key])]) 
+                case = "_".join([case, key, str(parameters[key])])
             command = "python inference.py"
             for key in parameters.keys():
                 command = command + " --{} {}".format(key, parameters[key])
