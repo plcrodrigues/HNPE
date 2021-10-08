@@ -30,7 +30,7 @@ def get_executor_cluster_margaret(job_name, timeout_hour=72, n_cpus=10):
     return executor
 
 
-def setup_inference(nextra, noise, alpha, beta):
+def setup_inference(noise, alpha, beta):
 
     for nextra in LIST_NEXTRA:
 
@@ -105,13 +105,12 @@ def setup_inference(nextra, noise, alpha, beta):
                               max_num_epochs=None)
 
 
-executor = get_executor_cluster_margaret(f'work_inference')
+executor = get_executor_cluster_margaret(f'HNPE-Ex1-ToyModel')
 # launch batches
 with executor.batch():
     print('Submitting jobs...', end='', flush=True)
     tasks = []
     # loop through difference ground truth parameters
-    # for params in LIST_ALPHA_BETA:
     for params in LIST_ALPHA_BETA:
         alpha, beta = params
         # results on different noise levels
