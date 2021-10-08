@@ -1,0 +1,64 @@
+Running 10000 simulations.:   0%|          | 0/10000 [00:00<?, ?it/s]Running 10000 simulations.:  20%|██        | 2026/10000 [00:00<00:00, 20259.00it/s]Running 10000 simulations.:  41%|████      | 4091/10000 [00:00<00:00, 20483.75it/s]Running 10000 simulations.:  62%|██████▏   | 6168/10000 [00:00<00:00, 20611.69it/s]Running 10000 simulations.:  82%|████████▏ | 8235/10000 [00:00<00:00, 20631.41it/s]Running 10000 simulations.: 100%|██████████| 10000/10000 [00:00<00:00, 20565.88it/s]
+Drawing 10000 posterior samples:   0%|          | 0/10000 [00:00<?, ?it/s]submitit ERROR (2021-10-08 17:53:44,329) - Submitted job triggered an exception
+Traceback (most recent call last):
+  File "/data/parietal/store/work/pcoelhor/miniconda3/lib/python3.8/runpy.py", line 194, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/data/parietal/store/work/pcoelhor/miniconda3/lib/python3.8/runpy.py", line 87, in _run_code
+    exec(code, run_globals)
+  File "/data/parietal/store/work/pcoelhor/miniconda3/lib/python3.8/site-packages/submitit/core/_submit.py", line 11, in <module>
+    submitit_main()
+  File "/data/parietal/store/work/pcoelhor/miniconda3/lib/python3.8/site-packages/submitit/core/submission.py", line 71, in submitit_main
+    process_job(args.folder)
+  File "/data/parietal/store/work/pcoelhor/miniconda3/lib/python3.8/site-packages/submitit/core/submission.py", line 64, in process_job
+    raise error
+  File "/data/parietal/store/work/pcoelhor/miniconda3/lib/python3.8/site-packages/submitit/core/submission.py", line 53, in process_job
+    result = delayed.result()
+  File "/data/parietal/store/work/pcoelhor/miniconda3/lib/python3.8/site-packages/submitit/core/utils.py", line 126, in result
+    self._result = self.function(*self.args, **self.kwargs)
+  File "inference-cluster.py", line 97, in setup_inference
+    _ = run_inference(simulator=simulator,
+  File "/data/parietal/store/work/pcoelhor/development/SBI-ICML2021/sbi_workforce/inference.py", line 44, in run_inference
+    theta, x = sbi_inference.simulate_for_sbi(
+  File "/data/parietal/store/work/pcoelhor/miniconda3/lib/python3.8/site-packages/sbi/inference/base.py", line 547, in simulate_for_sbi
+    theta = proposal.sample((num_simulations,))
+  File "/data/parietal/store/work/pcoelhor/miniconda3/lib/python3.8/site-packages/sbi/inference/posteriors/direct_posterior.py", line 388, in sample
+    samples = utils.rejection_sample_posterior_within_prior(
+  File "/data/parietal/store/work/pcoelhor/miniconda3/lib/python3.8/site-packages/torch/autograd/grad_mode.py", line 27, in decorate_context
+    return func(*args, **kwargs)
+  File "/data/parietal/store/work/pcoelhor/miniconda3/lib/python3.8/site-packages/sbi/utils/sbiutils.py", line 220, in rejection_sample_posterior_within_prior
+    candidates = posterior_nn.sample(sampling_batch_size, context=x).reshape(
+  File "/data/parietal/store/work/pcoelhor/miniconda3/lib/python3.8/site-packages/nflows/distributions/base.py", line 65, in sample
+    return self._sample(num_samples, context)
+  File "/data/parietal/store/work/pcoelhor/development/HNPE/Ex1-ToyModel/posterior.py", line 121, in _sample
+    samples_flow_1 = self._flow_1.sample(num_samples, context_1)[0]
+  File "/data/parietal/store/work/pcoelhor/miniconda3/lib/python3.8/site-packages/nflows/distributions/base.py", line 65, in sample
+    return self._sample(num_samples, context)
+  File "/data/parietal/store/work/pcoelhor/miniconda3/lib/python3.8/site-packages/nflows/flows/base.py", line 54, in _sample
+    samples, _ = self._transform.inverse(noise, context=embedded_context)
+  File "/data/parietal/store/work/pcoelhor/miniconda3/lib/python3.8/site-packages/nflows/transforms/base.py", line 60, in inverse
+    return self._cascade(inputs, funcs, context)
+  File "/data/parietal/store/work/pcoelhor/miniconda3/lib/python3.8/site-packages/nflows/transforms/base.py", line 50, in _cascade
+    outputs, logabsdet = func(outputs, context)
+  File "/data/parietal/store/work/pcoelhor/miniconda3/lib/python3.8/site-packages/nflows/transforms/base.py", line 60, in inverse
+    return self._cascade(inputs, funcs, context)
+  File "/data/parietal/store/work/pcoelhor/miniconda3/lib/python3.8/site-packages/nflows/transforms/base.py", line 50, in _cascade
+    outputs, logabsdet = func(outputs, context)
+  File "/data/parietal/store/work/pcoelhor/miniconda3/lib/python3.8/site-packages/nflows/transforms/base.py", line 60, in inverse
+    return self._cascade(inputs, funcs, context)
+  File "/data/parietal/store/work/pcoelhor/miniconda3/lib/python3.8/site-packages/nflows/transforms/base.py", line 50, in _cascade
+    outputs, logabsdet = func(outputs, context)
+  File "/data/parietal/store/work/pcoelhor/miniconda3/lib/python3.8/site-packages/nflows/transforms/coupling.py", line 119, in inverse
+    transform_split, logabsdet_split = self._coupling_transform_inverse(
+  File "/data/parietal/store/work/pcoelhor/miniconda3/lib/python3.8/site-packages/nflows/transforms/coupling.py", line 197, in _coupling_transform_inverse
+    return self._coupling_transform(inputs, transform_params, inverse=True)
+  File "/data/parietal/store/work/pcoelhor/miniconda3/lib/python3.8/site-packages/nflows/transforms/coupling.py", line 211, in _coupling_transform
+    outputs, logabsdet = self._piecewise_cdf(inputs, transform_params, inverse)
+  File "/data/parietal/store/work/pcoelhor/miniconda3/lib/python3.8/site-packages/nflows/transforms/coupling.py", line 492, in _piecewise_cdf
+    return spline_fn(
+  File "/data/parietal/store/work/pcoelhor/miniconda3/lib/python3.8/site-packages/nflows/transforms/splines/rational_quadratic.py", line 46, in unconstrained_rational_quadratic_spline
+    ) = rational_quadratic_spline(
+  File "/data/parietal/store/work/pcoelhor/miniconda3/lib/python3.8/site-packages/nflows/transforms/splines/rational_quadratic.py", line 135, in rational_quadratic_spline
+    assert (discriminant >= 0).all()
+AssertionError
+Drawing 10000 posterior samples:   0%|          | 0/10000 [00:00<?, ?it/s]
+srun: error: marg035: task 0: Exited with exit code 1
