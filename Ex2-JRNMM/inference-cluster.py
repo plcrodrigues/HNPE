@@ -132,6 +132,7 @@ with executor.batch():
     tasks = []   
     # loop on increasing numbers of nextra values
     for theta in LIST_THETA:
-        for naive in [False, True]:
+        # for naive in [False, True]:
+        for naive in [True]:
             kwargs = {'theta':theta, 'naive':naive} 
             tasks.append(executor.submit(setup_inference, **kwargs))              
