@@ -15,7 +15,7 @@ LIST_THETA = [[135.0, 220.0, 2000.0, 0.0],
 
 LIST_NEXTRA = [0, 10, 20, 30, 40]
 
-def get_executor_cluster_margaret(job_name, timeout_hour=72, n_cpus=40):
+def get_executor_cluster_margaret(job_name, timeout_hour=60, n_cpus=40):
 
     executor = submitit.AutoExecutor(job_name)
     executor.update_parameters(

@@ -11,7 +11,7 @@ LIST_ALPHA_BETA = [(0.5, 0.5), (0.25, 0.75), (0.75, 0.25),
                    (0.75, 0.75), (0.25, 0.25), (0.9, 0.5),
                    (0.5, 0.1), (0.1, 0.5), (0.5, 0.9)]
 
-LIST_NEXTRA = [0] + list(np.unique(np.logspace(0, 3, 20, dtype=int)))
+LIST_NEXTRA = list(np.unique(np.logspace(0, 3, 20, dtype=int)))
 
 
 def get_executor_cluster_margaret(job_name, timeout_hour=72, n_cpus=10):
