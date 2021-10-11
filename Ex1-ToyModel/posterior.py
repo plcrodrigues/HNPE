@@ -149,6 +149,9 @@ class ToyModelFlow_naive_nflows(base.Distribution):
 
         super().__init__()
 
+        embedding_net = torch.nn.Sequential(
+            embedding_net, AggregateInstances()
+        )
         self._embedding_net = embedding_net
 
         # instantiate the flow

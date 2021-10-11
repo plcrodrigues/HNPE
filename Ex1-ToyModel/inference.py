@@ -2,8 +2,8 @@ from functools import partial
 
 import torch
 
-from sbi_workforce.misc import make_label
-from sbi_workforce.inference import run_inference
+from hnpe.misc import make_label
+from hnpe.inference import run_inference
 import matplotlib.pyplot as plt
 
 from viz import get_posterior
@@ -86,7 +86,7 @@ if __name__ == "__main__":
     meta_parameters["noise"] = args.noise
     # which example case we are considering here
     meta_parameters["case"] = ''.join([
-        f"ToyModel_",
+        f"Flow/ToyModel_",
         f"naive_{args.naive}_",
         f"ntrials_{meta_parameters['n_trials']:02}_",
         f"nextra_{meta_parameters['n_extra']:02}_",

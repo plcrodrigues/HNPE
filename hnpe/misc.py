@@ -5,6 +5,7 @@ import os
 def make_label(meta_parameters):
     "This functions creates the basic label used when saving all files."
     keys = [
+        meta_parameters["summary"],
         "n_rd",
         str(meta_parameters["n_rd"]),
         "n_sr",

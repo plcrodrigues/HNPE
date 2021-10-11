@@ -7,9 +7,13 @@ from posterior import build_flow, IdentityToyModel
 from simulator import simulator_ToyModel, prior_ToyModel, get_ground_truth
 import submitit
 
-LIST_ALPHA_BETA = [(0.5, 0.5), (0.25, 0.75), (0.75, 0.25),
-                   (0.75, 0.75), (0.25, 0.25), (0.9, 0.5),
-                   (0.5, 0.1), (0.1, 0.5), (0.5, 0.9)]
+# LIST_ALPHA_BETA = [(0.5, 0.5), (0.25, 0.75), (0.75, 0.25),
+#                    (0.75, 0.75), (0.25, 0.25), (0.9, 0.5),
+#                    (0.5, 0.1), (0.1, 0.5), (0.5, 0.9)]
+
+LIST_ALPHA_BETA = [(0.25, 0.90), (0.75, 0.90), (0.50, 0.75),
+                   (0.25, 0.50), (0.75, 0.50), (0.50, 0.25),
+                   (0.25, 0.10), (0.75, 0.10)]
 
 LIST_NEXTRA = list(np.unique(np.logspace(0, 3, 20, dtype=int)))
 
