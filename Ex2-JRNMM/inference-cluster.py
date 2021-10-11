@@ -36,7 +36,7 @@ def get_executor_cluster_margaret(job_name, timeout_hour=60, n_cpus=40):
     )
     return executor
 
-def setup_inference(theta, naive, num_workers=20):
+def setup_inference(theta, naive, num_workers=40):
             
     for nextra in LIST_NEXTRA:
         
