@@ -58,7 +58,7 @@ class StackContext(torch.nn.Module):
 
 class JRNMMFlow_nflows_base(base.Distribution):
 
-    def __init__(self, batch_theta, batch_x, embedding_net, n_layers=6,
+    def __init__(self, batch_theta, batch_x, embedding_net, n_layers=10,
                  z_score_theta=True, z_score_x=True, aggregate=True):
 
         super().__init__()
@@ -97,7 +97,7 @@ class JRNMMFlow_nflows_base(base.Distribution):
 
 class JRNMMFlow_nflows_factorized(base.Distribution):
 
-    def __init__(self, batch_theta, batch_x, embedding_net, n_layers_factor=3,
+    def __init__(self, batch_theta, batch_x, embedding_net, n_layers_factor=5,
                  z_score_theta=True, z_score_x=True):
 
         super().__init__()

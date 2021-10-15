@@ -3,3 +3,4 @@ sbi-logs/
 results/
 *.out
 *.err
+*.zip

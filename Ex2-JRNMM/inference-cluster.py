@@ -7,21 +7,21 @@ from summary import summary_JRNMM
 from simulator import prior_JRNMM, simulator_JRNMM, get_ground_truth
 import submitit
 
-# LIST_THETA = [[135.0, 220.0, 2000.0, 0.0],
-#               [135.0, 220.0, 2000.0, -10.0],
-#               [135.0, 220.0, 2000.0, 10.0],
-#               [270.0, 220.0, 2000.0, 0.0],
-#               [68.0, 220.0, 2000.0, 0.0]]
+LIST_THETA = [[135.0, 220.0, 2000.0, 0.0],
+              [135.0, 220.0, 2000.0, -10.0],
+              [135.0, 220.0, 2000.0, 10.0],
+              [270.0, 220.0, 2000.0, 0.0],
+              [68.0, 220.0, 2000.0, 0.0]]
 
-LIST_THETA = [[135.0, 110.0, 2000.0, 0.0],
-              [68.0, 220.0, 2000.0, 10.0],
-            #   [270.0, 220.0, 2000.0, 10.0],
-              [135.0, 110.0, 1000.0, 0.0],
-              [135.0, 220.0, 1000.0, 0.0]]              
+# LIST_THETA = [[135.0, 110.0, 2000.0, 0.0],
+#               [68.0, 220.0, 2000.0, 10.0],
+#               [270.0, 220.0, 2000.0, 10.0],
+#               [135.0, 110.0, 1000.0, 0.0],
+#               [135.0, 220.0, 1000.0, 0.0]]              
 
-LIST_NEXTRA = [40]
+LIST_NEXTRA = [0, 10, 20, 30, 40]
 
-def get_executor_cluster_margaret(job_name, timeout_hour=60, n_cpus=40):
+def get_executor_cluster_margaret(job_name, timeout_hour=72, n_cpus=40):
 
     executor = submitit.AutoExecutor(job_name)
     executor.update_parameters(
@@ -138,7 +138,6 @@ with executor.batch():
     tasks = []   
     # loop on increasing numbers of nextra values
     for theta in LIST_THETA:
-        # for naive in [False, True]:
-        for naive in [True]:
+        for naive in [False, True]:
             kwargs = {'theta':theta, 'naive':naive} 
             tasks.append(executor.submit(setup_inference, **kwargs))              
