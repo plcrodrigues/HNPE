@@ -16,19 +16,13 @@ mpl.rcParams['axes.titlesize'] = 22
 mpl.rcParams['xtick.labelsize'] = 14
 mpl.rcParams['ytick.labelsize'] = 14
 
-LIST_NEXTRA = [0, 10, 20, 30, 40]
+LIST_NEXTRA = [0, 10, 20] #, 30, 40]
 
 LIST_THETA = [[135.0, 220.0, 2000.0, 0.0],
               [135.0, 220.0, 2000.0, -10.0],
               [135.0, 220.0, 2000.0, 10.0],
               [270.0, 220.0, 2000.0, 0.0],
-              [ 68.0, 220.0, 2000.0, 0.0],
-              [135.0, 110.0, 2000.0, 0.0],
-              [ 68.0, 220.0, 2000.0, 10.0],
-              [270.0, 220.0, 2000.0, 10.0],
-              [135.0, 110.0, 1000.0, 0.0],
-              [135.0, 220.0, 1000.0, 0.0]
-              ]  
+              [68.0, 220.0, 2000.0, 0.0]] 
 
 def boilerplate(theta, nextra, naive, round_idx=0):
 
@@ -100,15 +94,11 @@ def boilerplate(theta, nextra, naive, round_idx=0):
                                  z_score_theta=True,
                                  z_score_x=True)
 
-    try:
-        posterior = get_posterior(
-            simulator, prior, summary_extractor, build_nn_posterior,
-            meta_parameters, round_=round_idx, batch_theta=prior.sample((2,)), 
-            batch_x=summary_extractor(torch.randn(2, 1024, 1+nextra))
-        )
-    except:
-        print(f"problem at {meta_parameters['case']}")
-        posterior = None
+    posterior = get_posterior(
+        simulator, prior, summary_extractor, build_nn_posterior,
+        meta_parameters, round_=round_idx, batch_theta=prior.sample((2,)), 
+        batch_x=summary_extractor(torch.randn(2, 1024, 1+nextra))
+    )
 
     return posterior, prior
 
@@ -154,7 +144,8 @@ dist_naive = []
 for thetai in LIST_THETA:
     _, distance = get_samples_distance(
         naive=True, theta=thetai, round_idx=round_idx)
-    if len(distance) == len(LIST_NEXTRA):
+    # if len(distance) == len(LIST_NEXTRA):
+    if len(distance) > 0:
         dist_naive.append(distance)
 dist_naive_med = get_median_distance(dist_naive)
 
@@ -162,7 +153,8 @@ dist_factr = []
 for thetai in LIST_THETA:
     _, distance = get_samples_distance(
         naive=False, theta=thetai, round_idx=round_idx)
-    if len(distance) == len(LIST_NEXTRA):
+    # if len(distance) == len(LIST_NEXTRA):
+    if len(distance) > 0:
         dist_factr.append(distance)
 dist_factr_med = get_median_distance(dist_factr)
 
