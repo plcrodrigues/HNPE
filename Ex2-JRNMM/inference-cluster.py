@@ -32,6 +32,7 @@ def get_executor_cluster_margaret(job_name, timeout_hour=168, n_cpus=40):
             'ntasks': 1,
             'cpus-per-task': n_cpus,
             'distribution': 'block:block',
+            'partition': 'parietal'
         },
     )
     return executor
