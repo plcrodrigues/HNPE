@@ -38,7 +38,9 @@ if __name__ == "__main__":
     parser.add_argument('--dry', action='store_true',
                         help='Whether to do a dry run.') 
     parser.add_argument('--naive', action='store_true',
-                        help='Use the naive posterior or not.')                                                                                              
+                        help='Use the naive posterior or not.')    
+    parser.add_argument('--aggregate', action='store_true',
+                        help='Aggregate the extra observations in posterior.')                                                                                                                      
 
     args = parser.parse_args()
 
@@ -60,7 +62,8 @@ if __name__ == "__main__":
     meta_parameters["theta"] = torch.tensor(theta)
 
     # whether to do naive implementation
-    meta_parameters["naive"] = args.naive
+    naive = args.naive
+    meta_parameters["naive"] = naive
 
     # which example case we are considering here
     meta_parameters["case"] = "JRNMM_nextra_{:02}_" \
@@ -74,6 +77,10 @@ if __name__ == "__main__":
                                          meta_parameters["theta"][1],
                                          meta_parameters["theta"][2],
                                          meta_parameters["theta"][3])
+
+    aggregate = args.aggregate
+    if not aggregate and naive:
+        meta_parameters["case"] = meta_parameters["case"] + "_aggregate_False"
 
     # number of rounds to use in the SNPE procedure
     meta_parameters["n_rd"] = 2
@@ -122,7 +129,7 @@ if __name__ == "__main__":
     build_nn_posterior = partial(build_flow, 
                                  embedding_net=IdentityJRNMM(),
                                  naive=meta_parameters["naive"],
-                                 aggregate=True,
+                                 aggregate=aggregate,
                                  z_score_theta=True,
                                  z_score_x=True)                                 
 
