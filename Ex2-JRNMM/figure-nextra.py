@@ -16,13 +16,19 @@ mpl.rcParams['axes.titlesize'] = 22
 mpl.rcParams['xtick.labelsize'] = 14
 mpl.rcParams['ytick.labelsize'] = 14
 
-LIST_NEXTRA = [0, 10, 20] #, 30, 40]
+LIST_NEXTRA = [0, 10, 20, 30, 40]
 
 LIST_THETA = [[135.0, 220.0, 2000.0, 0.0],
               [135.0, 220.0, 2000.0, -10.0],
               [135.0, 220.0, 2000.0, 10.0],
               [270.0, 220.0, 2000.0, 0.0],
-              [68.0, 220.0, 2000.0, 0.0]] 
+              [68.0, 220.0, 2000.0, 0.0],
+              [135.0, 110.0, 2000.0, 0.0],
+              [68.0, 220.0, 2000.0, 10.0],
+              [270.0, 220.0, 2000.0, 10.0],
+              [135.0, 110.0, 1000.0, 0.0],
+              [135.0, 220.0, 1000.0, 0.0]
+              ]
 
 def boilerplate(theta, nextra, naive, round_idx=0):
 
@@ -94,11 +100,15 @@ def boilerplate(theta, nextra, naive, round_idx=0):
                                  z_score_theta=True,
                                  z_score_x=True)
 
-    posterior = get_posterior(
-        simulator, prior, summary_extractor, build_nn_posterior,
-        meta_parameters, round_=round_idx, batch_theta=prior.sample((2,)), 
-        batch_x=summary_extractor(torch.randn(2, 1024, 1+nextra))
-    )
+    try:
+        posterior = get_posterior(
+            simulator, prior, summary_extractor, build_nn_posterior,
+            meta_parameters, round_=round_idx, batch_theta=prior.sample((2,)), 
+            batch_x=summary_extractor(torch.randn(2, 1024, 1+nextra))
+        )
+    except:
+        print(f"Problem at {meta_parameters['case']}")
+        posterior = None
 
     return posterior, prior
 
@@ -120,7 +130,7 @@ def get_samples_distance(naive, theta, round_idx=1):
                 sd = np.sqrt(samples_coordj.var())
                 distance[nextra][j] = (
                     samples_coordj.var() + (samples_coordj.mean() - theta[j])**2
-                    )
+                    ) / sd
 
     return samples, distance
 
@@ -144,8 +154,8 @@ dist_naive = []
 for thetai in LIST_THETA:
     _, distance = get_samples_distance(
         naive=True, theta=thetai, round_idx=round_idx)
-    # if len(distance) == len(LIST_NEXTRA):
-    if len(distance) > 0:
+    if len(distance) == len(LIST_NEXTRA):
+    # if len(distance) > 0:
         dist_naive.append(distance)
 dist_naive_med = get_median_distance(dist_naive)
 
@@ -153,8 +163,8 @@ dist_factr = []
 for thetai in LIST_THETA:
     _, distance = get_samples_distance(
         naive=False, theta=thetai, round_idx=round_idx)
-    # if len(distance) == len(LIST_NEXTRA):
-    if len(distance) > 0:
+    if len(distance) == len(LIST_NEXTRA):
+#    if len(distance) > 0:
         dist_factr.append(distance)
 dist_factr_med = get_median_distance(dist_factr)
 
@@ -164,8 +174,8 @@ dist_factr_med_matrix = np.stack(
     [dist_factr_med[nextra] for nextra in LIST_NEXTRA])
 max_list = [max(dist_naive_med_matrix[0,i], dist_factr_med_matrix[0,i]
     ) for i in range(4)]
-dist_naive_med_matrix = dist_naive_med_matrix / max_list
-dist_factr_med_matrix = dist_factr_med_matrix / max_list
+# dist_naive_med_matrix = dist_naive_med_matrix / max_list
+# dist_factr_med_matrix = dist_factr_med_matrix / max_list
 
 dist_naive_merge = np.mean(dist_naive_med_matrix, axis=1)
 dist_factr_merge = np.mean(dist_factr_med_matrix, axis=1)
@@ -174,13 +184,13 @@ fig, ax = plt.subplots(figsize=(6.45, 4.8))
 plt.subplots_adjust(left=0.175, right=0.95, bottom=0.15, top=0.95)
 ax.plot(LIST_NEXTRA, dist_naive_merge, c='C2', lw=2.5, ls='--', label='naive')
 ax.plot(LIST_NEXTRA, dist_factr_merge, c='C2', lw=2.5, label='HNPE')
-ax.set_ylim(-0.05, 1.05)
+# ax.set_ylim(-0.05, 1.05)
 ax.set_ylabel(r'normalized $\mathcal{W}(q_{\phi}, \delta_{\theta})$')
 ax.set_xlabel(r'Number of extra observations $N$')
 ax.set_xticks([0, 10, 20, 30, 40])
 ax.set_xticklabels(['0', '10', '20', '30', '40'], fontsize=18)
-ax.set_yticks([0, 0.25, 0.50, 0.75, 1.00])
-ax.set_yticklabels(['0.0', '0.25', '0.50', '0.75', '1.00'], fontsize=18)
+# ax.set_yticks([0, 0.25, 0.50, 0.75, 1.00])
+# ax.set_yticklabels(['0.0', '0.25', '0.50', '0.75', '1.00'], fontsize=18)
 ax.legend(fontsize=16)
+# plt.savefig(f'figure_round_{round_idx}.pdf', format='pdf')
 fig.show()
-

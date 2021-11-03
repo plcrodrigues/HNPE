@@ -44,7 +44,7 @@ class StackContext(torch.nn.Module):
 
         Returns
         --------
-        context : torch.Tensor, shape (n_batch, n_embed+1)
+        context : torch.Tensor, shape (n_batch, n_embed + 1)
             Context where the input y has been encoded, except the last entry
             which is pass thru.
         """
@@ -63,8 +63,10 @@ class JRNMMFlow_nflows_base(base.Distribution):
 
         super().__init__()
 
-        embedding_net = torch.nn.Sequential(embedding_net, 
-                                            AggregateInstances(aggregate))
+        embedding_net = torch.nn.Sequential(
+            embedding_net, 
+            AggregateInstances(mean=aggregate)
+        )
         self._embedding_net = embedding_net
 
         # instantiate the flow
@@ -106,7 +108,8 @@ class JRNMMFlow_nflows_factorized(base.Distribution):
         # create a new net that embeds all n+1 observations and then aggregates
         # n of them via a sum operation
         embedding_net_1 = torch.nn.Sequential(
-            embedding_net, AggregateInstances()
+            embedding_net, 
+            AggregateInstances(mean=True)
         )
         self._embedding_net_1 = embedding_net_1
 
@@ -127,7 +130,6 @@ class JRNMMFlow_nflows_factorized(base.Distribution):
         # create a new embedding next that handles the fact of having
         # a context that is a stacking of the embedded observation x
         # and the gain parameter
-        # embedding_net_2 = torch.nn.Identity()
         embedding_net_2 = StackContext(embedding_net)
         self._embedding_net_2 = embedding_net_2
 
