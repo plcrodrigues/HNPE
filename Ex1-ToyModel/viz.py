@@ -9,6 +9,7 @@ def get_posterior(simulator, prior, build_nn_posterior, meta_parameters,
                   round_=0):
 
     folderpath = Path.cwd() / "results" / meta_parameters["label"]
+    print(folderpath)
 
     # load ground truth
     ground_truth = torch.load(folderpath / "ground_truth.pkl",
@@ -21,7 +22,9 @@ def get_posterior(simulator, prior, build_nn_posterior, meta_parameters,
                                       batch_x=batch_x)
     nn_posterior.eval()
     posterior = DirectPosterior(
-        method_family="snpe", neural_net=nn_posterior, prior=prior,
+        method_family="snpe", 
+        neural_net=nn_posterior, 
+        prior=prior,
         x_shape=ground_truth["observation"].shape
     )
 
@@ -37,7 +40,7 @@ def get_posterior(simulator, prior, build_nn_posterior, meta_parameters,
 
 def display_posterior(posterior, prior):
 
-    n_samples = 100000
+    n_samples = 100_000
 
     samples = posterior.sample((n_samples,), sample_with_mcmc=False)
 

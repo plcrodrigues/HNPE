@@ -137,7 +137,8 @@ if __name__ == "__main__":
                                    summary_extractor=summary_net,
                                    save_rounds=saverounds,
                                    device=device,
-                                   max_num_epochs=maxepochs)
+                                   max_num_epochs=maxepochs,
+                                   stop_after_epochs=stop_after_epochs)
 
     else:
         posterior = get_posterior(

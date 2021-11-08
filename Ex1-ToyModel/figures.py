@@ -18,9 +18,9 @@ mpl.rcParams['ytick.labelsize'] = 14
 mpl.rcParams['legend.title_fontsize'] = 18 
 plt.rc('legend', fontsize=14)
 
-THETA_LIST = [(0.5, 0.5), (0.25, 0.75), (0.75, 0.25), 
-              (0.75, 0.75), (0.25, 0.25), (0.9, 0.5), 
-              (0.5, 0.1), (0.1, 0.5), (0.5, 0.9)]
+THETA_LIST = [(0.50, 0.50), (0.25, 0.75), (0.75, 0.25), 
+              (0.75, 0.75), (0.25, 0.25), (0.90, 0.50), 
+              (0.50, 0.10), (0.10, 0.50), (0.50, 0.90)]
 
 NEXTRA_LIST = list(np.unique(np.logspace(0, 3, 20, dtype=int)))   
 
@@ -82,11 +82,12 @@ def get_posterior(alpha, beta, gamma, nextra, ntrials, noise, naive, round_idx=0
                                 embedding_net=summary_net, 
                                 naive=naive)
 
-    posterior = viz.get_posterior(simulator, 
-                                prior, 
-                                build_nn_posterior, 
-                                meta_parameters, 
-                                round_=round_idx)
+    posterior = viz.get_posterior(
+        simulator, 
+        prior, 
+        build_nn_posterior, 
+        meta_parameters, 
+        round_=round_idx)
 
     posterior.set_default_x(ground_truth['observation'])
     return posterior
@@ -102,24 +103,19 @@ def get_results_our_proposal(naive):
         for theta in THETA_LIST:
             
             alpha, beta = theta
+            posterior = get_posterior(
+                alpha=alpha, beta=beta, gamma=1.00, 
+                nextra=nextra, ntrials=1, noise=0.00, 
+                naive=naive, round_idx=4)
+            samples = posterior.sample((10_000,), 
+                sample_with_mcmc=False,
+                show_progress_bars=False)
 
-            try:
-                posterior = get_posterior(alpha=alpha, beta=beta, gamma=1.00, 
-                                        nextra=nextra, ntrials=1, noise=0.00, 
-                                        naive=naive, round_idx=4)
-                samples = posterior.sample((10_000,), 
-                    sample_with_mcmc=False,
-                    show_progress_bars=False)
+            dist_var = samples.var(dim=0).numpy()
+            dist_mean = (samples.mean(dim=0) - np.array([alpha, beta]))**2
+            dist = dist_mean + dist_var
 
-                dist_var = samples.var(dim=0).numpy()
-                dist_mean = (samples.mean(dim=0) - np.array([alpha, beta]))**2
-                dist = dist_mean + dist_var
-
-                distance[nextra].append(dist.numpy())
-
-            except:
-                print(f'problem at alpha={alpha}, beta={beta}, nextra={nextra}')
-
+            distance[nextra].append(dist.numpy())
 
     distance_quantiles = np.stack([np.stack([np.quantile(np.stack(distance[nextra])[:,i], q=[0.25, 0.50, 0.75]) for i in range(2)]) for nextra in NEXTRA_LIST])
     distance_quantiles_alpha = distance_quantiles[:,0,:]

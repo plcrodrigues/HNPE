@@ -74,7 +74,7 @@ class ToyModelFlow_factorized_nflows(base.Distribution):
                            z_score_x=z_score_theta,
                            z_score_y=z_score_x,
                            embedding_net=embedding_net_1,
-                           num_transforms=1)
+                           num_transforms=2)
 
         self._flow_1 = flow_1
 
@@ -95,7 +95,7 @@ class ToyModelFlow_factorized_nflows(base.Distribution):
                            z_score_x=z_score_theta,
                            z_score_y=z_score_x,
                            embedding_net=embedding_net_2,
-                           num_transforms=1)
+                           num_transforms=2)
 
         self._flow_2 = flow_2
 
@@ -160,7 +160,7 @@ class ToyModelFlow_naive_nflows(base.Distribution):
                          z_score_x=z_score_theta,
                          z_score_y=z_score_x,
                          embedding_net=embedding_net,
-                         num_transforms=2)  # same capacity as factorized
+                         num_transforms=4)  # same capacity as factorized
 
         self._flow = flow
 

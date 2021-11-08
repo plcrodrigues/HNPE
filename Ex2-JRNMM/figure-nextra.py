@@ -186,26 +186,33 @@ for label in ['naive-1', 'naive-2', 'factr']:
 # fig.show()
 
 fig, ax = plt.subplots(figsize=(12.4, 11.4), ncols=2, nrows=2)
+plt.subplots_adjust(hspace=0.30, wspace=0.20)
 parameters = ['$C$', '$\mu$', '$\sigma$', '$g$']
-for label in ['naive-1', 'naive-2', 'factr']:
+names = ['naive', 'aggreg', 'HNPE']
+for ll, label in enumerate(['naive-1', 'naive-2', 'factr']):
     for z, axz in enumerate(ax.flatten()):
         dist_matrix = np.zeros((len(LIST_NEXTRA), len(dist_dic[label])))
         for i in range(dist_matrix.shape[0]):
             for j in range(dist_matrix.shape[1]):
                 dist_matrix[i,j] = dist_dic[label][j][LIST_NEXTRA[i]][z]
         y = np.median(dist_matrix, axis=1)
-        axz.plot(LIST_NEXTRA, y, lw=3.0, label=label)
-        if z > 1:
-            axz.set_xlabel('$N$', fontsize=14)
-        axz.set_title(parameters[z], fontsize=18)
-axz.legend()
+        axz.plot(LIST_NEXTRA, y, lw=3.0, label=names[ll])
+        axz.set_xlabel(r'Number of extra observations $N$', fontsize=18)
+        axz.set_title('Parameter ' + parameters[z], fontsize=18)
+        # axz.text(
+        #     x=0.5, y=0.92, 
+        #     s='Parameter ' + parameters[z], 
+        #     fontsize=18, 
+        #     ha='center', 
+        #     transform=axz.transAxes)
+axz.legend(fontsize=16)
 fig.show()
 
-ntheta = 8
-dist_matrix = np.zeros((3, 5, ntheta, 4)) # 3 labels, 5 nextra, ntheta, 4 coord
+ntheta_list = range(8)
+dist_matrix = np.zeros((3, 5, len(ntheta_list), 4)) # 3 labels, 5 nextra, ntheta, 4 coord
 for i, label in enumerate(['naive-1', 'naive-2', 'factr']): # loop labels
     for j in range(5): # loop nextra
-        for k in range(ntheta): # loop theta
+        for k in ntheta_list: # loop theta
             for l in range(4): # loop coordinates
                 dist_matrix[i, j, k, l] = dist_dic[label][k][LIST_NEXTRA[j]][l]
 
@@ -213,11 +220,16 @@ std = [np.std(dist_matrix[:,:,:,z]) for z in range(4)]
 y = np.stack([dist_matrix[:,:,:,j]/std[j] for j in range(4)])
 y = np.mean(y, axis=0)
 ymed = np.median(y, axis=-1)
-y025 = np.quantile(y, q=0.25, axis=-1)
-y075 = np.quantile(y, q=0.75, axis=-1)
-fig, ax = plt.subplots(figsize=(8.3, 7.7))
+fig, ax = plt.subplots(figsize=(9.0, 6.6))
+names = ['naive', 'aggreg', 'HNPE']
+colors = ['C0', 'C1', 'C2']
 for i, label in enumerate(['naive-1', 'naive-2', 'factr']):
-    ax.plot(LIST_NEXTRA, ymed[i,:], lw=3.0, label=label)
-    # ax.fill_between(LIST_NEXTRA, y025[i,:], y075[i,:], alpha=0.10)
-ax.legend()
+    ax.plot(LIST_NEXTRA, ymed[i,:], lw=3.0, label=names[i], color=colors[i])
+ax.set_ylabel(r'Normalized $\mathcal{W}(q_{\phi}, \delta_{\theta})$', fontsize=18)
+ax.set_xlabel(r'Number of extra observations $N$', fontsize=18)
+ax.set_xticks([0, 10, 20, 30, 40])
+ax.set_xticklabels(['0', '10', '20', '30', '40'], fontsize=18)
+ax.set_yticks([0.5, 0.75, 1.0, 1.25, 1.5])
+ax.set_yticklabels(['0.50', '0.75', '1.00', '1.25', '1.50'], fontsize=18)
+ax.legend(fontsize=16)
 fig.show()

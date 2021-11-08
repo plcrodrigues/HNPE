@@ -3,12 +3,22 @@ import numpy as np
 from pathlib import Path
 
 from sbi import inference as sbi_inference
+from sbi.utils import get_log_root
+from torch.utils.tensorboard import SummaryWriter
+from datetime import datetime
 
+def summary_plcr(prefix):
+    logdir = Path(
+        get_log_root(),
+        prefix,
+        datetime.now().isoformat().replace(":", "_"),
+    )
+    return SummaryWriter(logdir)    
 
 def run_inference(simulator, prior, build_nn_posterior, ground_truth,
                   meta_parameters, summary_extractor=None, save_rounds=False,
                   seed=42, device="cpu", num_workers=1, max_num_epochs=None,
-                  training_batch_size=100):
+                  stop_after_epochs=20, training_batch_size=100):
 
     # set seed for numpy and torch
     np.random.seed(seed)
@@ -32,7 +42,8 @@ def run_inference(simulator, prior, build_nn_posterior, ground_truth,
         prior=prior,
         density_estimator=build_nn_posterior,
         show_progress_bars=True,
-        device=device
+        device=device,
+        summary_writer=summary_plcr(meta_parameters["label"])
     )
 
     # loop over rounds
@@ -59,6 +70,8 @@ def run_inference(simulator, prior, build_nn_posterior, ground_truth,
             use_combined_loss=True,
             discard_prior_samples=True,
             max_num_epochs=max_num_epochs,
+            stop_after_epochs=stop_after_epochs,
+            show_train_summary=True
         )
         nn_posterior.zero_grad()
         posterior = inference.build_posterior(nn_posterior)
