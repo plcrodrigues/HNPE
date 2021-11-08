@@ -30,7 +30,7 @@ LIST_THETA = [[135.0, 220.0, 2000.0, 0.0],
               [135.0, 220.0, 1000.0, 0.0]
               ]
 
-def boilerplate(theta, nextra, naive, round_idx=0):
+def boilerplate(theta, nextra, naive, aggregate=True, round_idx=0):
 
     # setup the parameters for the example
     meta_parameters = {}
@@ -56,6 +56,9 @@ def boilerplate(theta, nextra, naive, round_idx=0):
                              meta_parameters["theta"][1],
                              meta_parameters["theta"][2],
                              meta_parameters["theta"][3])
+
+    if not aggregate and naive:
+        meta_parameters["case"] = meta_parameters["case"] + "_aggregate_False"
 
     # number of rounds to use in the SNPE procedure
     meta_parameters["n_rd"] = 2
@@ -96,7 +99,7 @@ def boilerplate(theta, nextra, naive, round_idx=0):
     build_nn_posterior = partial(build_flow,
                                  embedding_net=IdentityJRNMM(),
                                  naive=meta_parameters["naive"],
-                                 aggregate=True,
+                                 aggregate=aggregate,
                                  z_score_theta=True,
                                  z_score_x=True)
 
@@ -112,14 +115,14 @@ def boilerplate(theta, nextra, naive, round_idx=0):
 
     return posterior, prior
 
-def get_samples_distance(naive, theta, round_idx=1):
+def get_samples_distance(naive, theta, round_idx=1, aggregate=True):
 
     samples = {}
     distance = {}
     for nextra in LIST_NEXTRA:
         # sample from the posterior distribution with naive architecture
-        posterior, prior = boilerplate(
-            theta, nextra, naive=naive, round_idx=round_idx)
+        posterior, _ = boilerplate(
+            theta, nextra, naive=naive, round_idx=round_idx, aggregate=aggregate)
         if posterior is not None:
             samples[nextra] = posterior.sample(
                 (10000,), sample_with_mcmc=False)
@@ -148,49 +151,73 @@ def get_median_distance(dist):
 
     return dist_med
 
-round_idx = 1
+round_idx = 0
 
-dist_naive = []
-for thetai in LIST_THETA:
-    _, distance = get_samples_distance(
-        naive=True, theta=thetai, round_idx=round_idx)
-    if len(distance) == len(LIST_NEXTRA):
-    # if len(distance) > 0:
-        dist_naive.append(distance)
-dist_naive_med = get_median_distance(dist_naive)
+dist_dic = {}
 
-dist_factr = []
-for thetai in LIST_THETA:
-    _, distance = get_samples_distance(
-        naive=False, theta=thetai, round_idx=round_idx)
-    if len(distance) == len(LIST_NEXTRA):
-#    if len(distance) > 0:
-        dist_factr.append(distance)
-dist_factr_med = get_median_distance(dist_factr)
+configs = {'naive-1':{'naive': True, 'aggregate':False},
+           'naive-2':{'naive': True, 'aggregate':True},
+           'factr':{'naive': False, 'aggregate':True}}
 
-dist_naive_med_matrix = np.stack(
-    [dist_naive_med[nextra] for nextra in LIST_NEXTRA])
-dist_factr_med_matrix = np.stack(
-    [dist_factr_med[nextra] for nextra in LIST_NEXTRA])
-max_list = [max(dist_naive_med_matrix[0,i], dist_factr_med_matrix[0,i]
-    ) for i in range(4)]
-# dist_naive_med_matrix = dist_naive_med_matrix / max_list
-# dist_factr_med_matrix = dist_factr_med_matrix / max_list
+for label in ['naive-1', 'naive-2', 'factr']:
+    dist_dic[label] = []
+    for thetai in LIST_THETA:
+        _, distance = get_samples_distance(
+            naive=configs[label]['naive'], 
+            theta=thetai, 
+            round_idx=round_idx, 
+            aggregate=configs[label]['aggregate'])
+        if len(distance) == len(LIST_NEXTRA):
+            dist_dic[label].append(distance)
 
-dist_naive_merge = np.mean(dist_naive_med_matrix, axis=1)
-dist_factr_merge = np.mean(dist_factr_med_matrix, axis=1)
+# fig, ax = plt.subplots(figsize=(10.25, 5.15))
+# plt.subplots_adjust(left=0.175, right=0.95, bottom=0.15, top=0.95)
+# for label in ['naive-1', 'naive-2', 'factr']:
+#     ax.plot(LIST_NEXTRA, dist_dic[label], lw=2.0, label=label)
+# # ax.set_ylim(-0.05, 1.05)
+# ax.set_ylabel(r'$\mathcal{W}(q_{\phi}, \delta_{\theta})$')
+# ax.set_xlabel(r'Number of extra observations $N$')
+# ax.set_xticks([0, 10, 20, 30, 40])
+# ax.set_xticklabels(['0', '10', '20', '30', '40'], fontsize=18)
+# # ax.set_yticks([0, 0.25, 0.50, 0.75, 1.00])
+# # ax.set_yticklabels(['0.0', '0.25', '0.50', '0.75', '1.00'], fontsize=18)
+# ax.legend(fontsize=16)
+# # plt.savefig(f'figure_round_{round_idx}.pdf', format='pdf')
+# fig.show()
 
-fig, ax = plt.subplots(figsize=(6.45, 4.8))
-plt.subplots_adjust(left=0.175, right=0.95, bottom=0.15, top=0.95)
-ax.plot(LIST_NEXTRA, dist_naive_merge, c='C2', lw=2.5, ls='--', label='naive')
-ax.plot(LIST_NEXTRA, dist_factr_merge, c='C2', lw=2.5, label='HNPE')
-# ax.set_ylim(-0.05, 1.05)
-ax.set_ylabel(r'normalized $\mathcal{W}(q_{\phi}, \delta_{\theta})$')
-ax.set_xlabel(r'Number of extra observations $N$')
-ax.set_xticks([0, 10, 20, 30, 40])
-ax.set_xticklabels(['0', '10', '20', '30', '40'], fontsize=18)
-# ax.set_yticks([0, 0.25, 0.50, 0.75, 1.00])
-# ax.set_yticklabels(['0.0', '0.25', '0.50', '0.75', '1.00'], fontsize=18)
-ax.legend(fontsize=16)
-# plt.savefig(f'figure_round_{round_idx}.pdf', format='pdf')
+fig, ax = plt.subplots(figsize=(12.4, 11.4), ncols=2, nrows=2)
+parameters = ['$C$', '$\mu$', '$\sigma$', '$g$']
+for label in ['naive-1', 'naive-2', 'factr']:
+    for z, axz in enumerate(ax.flatten()):
+        dist_matrix = np.zeros((len(LIST_NEXTRA), len(dist_dic[label])))
+        for i in range(dist_matrix.shape[0]):
+            for j in range(dist_matrix.shape[1]):
+                dist_matrix[i,j] = dist_dic[label][j][LIST_NEXTRA[i]][z]
+        y = np.median(dist_matrix, axis=1)
+        axz.plot(LIST_NEXTRA, y, lw=3.0, label=label)
+        if z > 1:
+            axz.set_xlabel('$N$', fontsize=14)
+        axz.set_title(parameters[z], fontsize=18)
+axz.legend()
+fig.show()
+
+ntheta = 8
+dist_matrix = np.zeros((3, 5, ntheta, 4)) # 3 labels, 5 nextra, ntheta, 4 coord
+for i, label in enumerate(['naive-1', 'naive-2', 'factr']): # loop labels
+    for j in range(5): # loop nextra
+        for k in range(ntheta): # loop theta
+            for l in range(4): # loop coordinates
+                dist_matrix[i, j, k, l] = dist_dic[label][k][LIST_NEXTRA[j]][l]
+
+std = [np.std(dist_matrix[:,:,:,z]) for z in range(4)]
+y = np.stack([dist_matrix[:,:,:,j]/std[j] for j in range(4)])
+y = np.mean(y, axis=0)
+ymed = np.median(y, axis=-1)
+y025 = np.quantile(y, q=0.25, axis=-1)
+y075 = np.quantile(y, q=0.75, axis=-1)
+fig, ax = plt.subplots(figsize=(8.3, 7.7))
+for i, label in enumerate(['naive-1', 'naive-2', 'factr']):
+    ax.plot(LIST_NEXTRA, ymed[i,:], lw=3.0, label=label)
+    # ax.fill_between(LIST_NEXTRA, y025[i,:], y075[i,:], alpha=0.10)
+ax.legend()
 fig.show()
