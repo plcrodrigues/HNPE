@@ -20,7 +20,7 @@ estimate them from a given observation xo. To try and break this, we consider
 that each xo is accompanied by a few other observations x1, ..., xN which all
 share the same parameter beta but with different values for alpha. Our goal
 then is to use this extra information to obtain the posterior distribution
-of p(alpha, beta | xo, x1, ..., xN)
+of p(alpha, beta | x0, x1, ..., xN)
 """
 
 if __name__ == "__main__":
@@ -42,12 +42,15 @@ if __name__ == "__main__":
                         help='Show results from previous run.')
     parser.add_argument('--naive', action='store_true',
                         help='Use naive posterior estimation.')
+    parser.add_argument('--aggregate', action='store_true',
+                        help='Aggregate the extra observations.')                        
     parser.add_argument('--round', '-r', type=int, default=0,
                         help='Show results from previous inference run.')
     parser.add_argument('--nextra', '-n', type=int, default=0,
                         help='How many extra observations to consider.')
     parser.add_argument('--ntrials', '-t', type=int, default=1,
                         help='How many trials to consider.')
+
     parser.add_argument('--dry', action='store_true')
     args = parser.parse_args()
 
@@ -124,7 +127,8 @@ if __name__ == "__main__":
     # choose a function which creates a neural network density estimator
     build_nn_posterior = partial(build_flow,
                                  embedding_net=summary_net,
-                                 naive=args.naive)
+                                 naive=args.naive,
+                                 aggregate=args.aggregate)
 
     # decide whether to run inference or viz the results from previous runs
     if not args.viz:
@@ -137,8 +141,7 @@ if __name__ == "__main__":
                                    summary_extractor=summary_net,
                                    save_rounds=saverounds,
                                    device=device,
-                                   max_num_epochs=maxepochs,
-                                   stop_after_epochs=stop_after_epochs)
+                                   max_num_epochs=maxepochs)
 
     else:
         posterior = get_posterior(

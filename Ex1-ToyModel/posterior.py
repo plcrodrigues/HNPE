@@ -2,8 +2,7 @@ import torch
 
 # Imports for the SBI package
 from pyknos.nflows.distributions import base
-from sbi.utils.get_nn_models import build_nsf
-
+from sbi.utils.get_nn_models import build_nsf, build_maf
 
 class IdentityToyModel(torch.nn.Module):
     def __init__(self):
@@ -14,13 +13,15 @@ class IdentityToyModel(torch.nn.Module):
 
 
 class AggregateInstances(torch.nn.Module):
-    def __init__(self):
+    def __init__(self, aggregate=True):
         super().__init__()
+        self._aggregate = aggregate
 
     def forward(self, x):
-        xobs = x[:, 0][:, None]  # n_batch, n_embed
-        xagg = x[:, 1:].mean(dim=1)[:, None]  # n_batch, n_embed
-        x = torch.cat([xobs, xagg], dim=1)  # n_batch, 2*n_embed
+        if self._aggregate:
+            xobs = x[:, 0][:, None]  # n_batch, n_embed
+            xagg = x[:, 1:].mean(dim=1)[:, None]  # n_batch, n_embed
+            x = torch.cat([xobs, xagg], dim=1)  # n_batch, 2*
         return x
 
 
@@ -61,7 +62,7 @@ class ToyModelFlow_factorized_nflows(base.Distribution):
         # create a new net that embeds all n+1 observations and then aggregates
         # n of them via a sum operation
         embedding_net_1 = torch.nn.Sequential(
-            embedding_net, AggregateInstances()
+            embedding_net, AggregateInstances(aggregate=(batch_x.shape[1] > 1))
         )
         self._embedding_net_1 = embedding_net_1
 
@@ -74,7 +75,7 @@ class ToyModelFlow_factorized_nflows(base.Distribution):
                            z_score_x=z_score_theta,
                            z_score_y=z_score_x,
                            embedding_net=embedding_net_1,
-                           num_transforms=2)
+                           num_transforms=5)                        
 
         self._flow_1 = flow_1
 
@@ -95,7 +96,7 @@ class ToyModelFlow_factorized_nflows(base.Distribution):
                            z_score_x=z_score_theta,
                            z_score_y=z_score_x,
                            embedding_net=embedding_net_2,
-                           num_transforms=2)
+                           num_transforms=5)
 
         self._flow_2 = flow_2
 
@@ -145,12 +146,12 @@ class ToyModelFlow_factorized_nflows(base.Distribution):
 class ToyModelFlow_naive_nflows(base.Distribution):
 
     def __init__(self, batch_theta, batch_x, embedding_net,
-                 z_score_theta=True, z_score_x=True):
+                 z_score_theta=True, z_score_x=True, aggregate=True):
 
         super().__init__()
 
         embedding_net = torch.nn.Sequential(
-            embedding_net, AggregateInstances()
+            embedding_net, AggregateInstances(aggregate=aggregate)
         )
         self._embedding_net = embedding_net
 
@@ -160,7 +161,7 @@ class ToyModelFlow_naive_nflows(base.Distribution):
                          z_score_x=z_score_theta,
                          z_score_y=z_score_x,
                          embedding_net=embedding_net,
-                         num_transforms=4)  # same capacity as factorized
+                         num_transforms=10)  # same capacity as factorized
 
         self._flow = flow
 
@@ -183,11 +184,12 @@ class ToyModelFlow_naive_nflows(base.Distribution):
 
 
 def build_flow(batch_theta, batch_x, embedding_net=torch.nn.Identity(),
-               naive=False):
+               naive=False, aggregate=True):
     if naive:
         flow = ToyModelFlow_naive_nflows(batch_theta,
                                          batch_x,
-                                         embedding_net)
+                                         embedding_net, 
+                                         aggregate=aggregate)
     else:
         flow = ToyModelFlow_factorized_nflows(batch_theta,
                                               batch_x,

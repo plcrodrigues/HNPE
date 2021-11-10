@@ -129,52 +129,60 @@ def get_samples_distance(naive, theta, round_idx=0, aggregate=True):
 
     return samples, distance
 
-prior = prior_JRNMM(parameters=[('C', 10.0, 250.0),
-                                ('mu', 50.0, 500.0),
-                                ('sigma', 100.0, 5000.0),
-                                ('gain', -20.0, +20.0)])
+# prior = prior_JRNMM(parameters=[('C', 10.0, 250.0),
+#                                 ('mu', 50.0, 500.0),
+#                                 ('sigma', 100.0, 5000.0),
+#                                 ('gain', -20.0, +20.0)])
 
-nexample = 100
+# nexample = 100
 
-list_theta = prior.sample((nexample,))
-dist_matrix = np.zeros((3, 5, nexample, 4)) # 3 labels, 5 nextra, nexample, 4 coord
-configs = {'naive-1':{'naive': True, 'aggregate':False},
-           'naive-2':{'naive': True, 'aggregate':True},
-           'factr':{'naive': False, 'aggregate':True}}
+# list_theta = prior.sample((nexample,))
+# dist_matrix = np.zeros((3, 5, nexample, 4)) # 3 labels, 5 nextra, nexample, 4 coord
+# configs = {'naive-1':{'naive': True, 'aggregate':False},
+#            'naive-2':{'naive': True, 'aggregate':True},
+#            'factr':{'naive': False, 'aggregate':True}}
 
-for i, labeli in enumerate(['naive-1', 'naive-2', 'factr']):
-    print(labeli)
-    for k, thetak in tqdm(enumerate(list_theta), total=nexample):
-        naive = configs[labeli]['naive']
-        aggregate = configs[labeli]['aggregate']
-        _, distance = get_samples_distance(
-            naive=naive, theta=thetak, round_idx=0, aggregate=aggregate)
-        for j, nj in enumerate(LIST_NEXTRA):
-            dist_matrix[i, j, k, :] = distance[nj]
+# for i, labeli in enumerate(['naive-1', 'naive-2', 'factr']):
+#     print(labeli)
+#     for k, thetak in tqdm(enumerate(list_theta), total=nexample):
+#         naive = configs[labeli]['naive']
+#         aggregate = configs[labeli]['aggregate']
+#         _, distance = get_samples_distance(
+#             naive=naive, theta=thetak, round_idx=0, aggregate=aggregate)
+#         for j, nj in enumerate(LIST_NEXTRA):
+#             dist_matrix[i, j, k, :] = distance[nj]
 
-std = [np.std(dist_matrix[:,:,:,z]) for z in range(4)]
-y = np.stack([dist_matrix[:,:,:,j]/std[j] for j in range(4)])
-y = np.mean(y, axis=0)
+# std = [np.std(dist_matrix[:,:,:,z]) for z in range(4)]
+# y = np.stack([dist_matrix[:,:,:,j]/std[j] for j in range(4)])
+# y = np.mean(y, axis=0)
 
-ymed = np.median(y, axis=-1) 
-y025 = np.quantile(y, q=0.25, axis=-1)
-y075 = np.quantile(y, q=0.75, axis=-1)      
+# ymed = np.median(y, axis=-1) 
+# y025 = np.quantile(y, q=0.25, axis=-1)
+# y075 = np.quantile(y, q=0.75, axis=-1)      
+
+# import joblib
+# results = [y, ymed, y025, y075]
+# joblib.dump(results, 'results-ducktape.pkl')
 
 import joblib
-results = [ymed, y025, y075]
-joblib.dump(results, 'results-ducktape.pkl')
+results = joblib.load('results-ducktape.pkl')
+y = results[0]
 
-# fig, ax = plt.subplots(figsize=(9.0, 6.6))
-# names = ['naive', 'aggreg', 'HNPE']
-# colors = ['C0', 'C1', 'C2']
-# for i, label in enumerate(['naive-1', 'naive-2', 'factr']):
-#     ax.plot(LIST_NEXTRA, ymed[i,:], lw=3.0, label=names[i], color=colors[i])
-# ax.set_ylabel(r'Normalized $\mathcal{W}(q_{\phi}, \delta_{\theta})$', fontsize=18)
-# ax.set_xlabel(r'Number of extra observations $N$', fontsize=18)
-# ax.set_xticks([0, 10, 20, 30, 40])
-# ax.set_xticklabels(['0', '10', '20', '30', '40'], fontsize=18)
-# ax.set_yticks([0.5, 0.75, 1.0, 1.25, 1.5])
-# ax.set_yticklabels(['0.50', '0.75', '1.00', '1.25', '1.50'], fontsize=18)
-# ax.legend(fontsize=16)
+ymed = np.mean(np.median(y, axis=3), axis=0)
+y025 = np.mean(np.quantile(y, q=0.25, axis=3), axis=0)
+y075 = np.mean(np.quantile(y, q=0.75, axis=3), axis=0)
 
-# fig.show()
+fig, ax = plt.subplots(figsize=(9.0, 6.6))
+names = ['naive', 'aggreg', 'HNPE']
+colors = ['C0', 'C1', 'C2']
+for i, label in enumerate(['naive-1', 'naive-2', 'factr']):
+    ax.plot(LIST_NEXTRA, ymed[i,:], lw=3.0, label=names[i], color=colors[i])
+    ax.fill_between(LIST_NEXTRA, y025[i,:], y075[i,:], alpha=0.10, color=colors[i])
+ax.set_ylabel(r'Normalized $\mathcal{W}(q_{\phi}, \delta_{\theta})$', fontsize=18)
+ax.set_xlabel(r'Number of extra observations $N$', fontsize=18)
+ax.set_xticks([0, 10, 20, 30, 40])
+ax.set_xticklabels(['0', '10', '20', '30', '40'], fontsize=18)
+ax.set_yticks([0.5, 0.6, 0.7, 0.8, 0.9])
+ax.set_yticklabels(['0.50', '0.60', '0.70', '0.80', '0.90'], fontsize=18)
+ax.legend(fontsize=16)
+fig.show()

@@ -225,8 +225,10 @@ names = ['naive', 'aggreg', 'HNPE']
 colors = ['C0', 'C1', 'C2']
 for i, label in enumerate(['naive-1', 'naive-2', 'factr']):
     ax.plot(LIST_NEXTRA, ymed[i,:], lw=3.0, label=names[i], color=colors[i])
-ax.set_ylabel(r'Normalized $\mathcal{W}(q_{\phi}, \delta_{\theta})$', fontsize=18)
-ax.set_xlabel(r'Number of extra observations $N$', fontsize=18)
+ax.set_ylabel(
+    r'Normalized $\mathcal{W}(q_{\phi}, \delta_{\theta})$', fontsize=18)
+ax.set_xlabel(
+    r'Number of extra observations $N$', fontsize=18)
 ax.set_xticks([0, 10, 20, 30, 40])
 ax.set_xticklabels(['0', '10', '20', '30', '40'], fontsize=18)
 ax.set_yticks([0.5, 0.75, 1.0, 1.25, 1.5])
