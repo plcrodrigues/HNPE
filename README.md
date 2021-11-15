@@ -57,7 +57,9 @@ To include noise in the observations, you should run, for instance,
 
 > python inference.py --nextra 10 --noise 0.05
 
-The way of doing things for the `Ex2-JRNMM` is exactly the same, except for a few choices of input parameters. Please do
+The way of doing things for `Ex2-JRNMM` is exactly the same, except for a few choices of input parameters. 
+
+Please do
 
 > python inference.py --help
 
