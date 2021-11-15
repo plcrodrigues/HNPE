@@ -88,7 +88,7 @@ def get_ground_truth(meta_parameters, p_alpha=None, flatten=False):
                                      n_trials=meta_parameters["n_trials"],
                                      p_alpha=p_alpha,
                                      gamma=meta_parameters["gamma"],
-                                     sigma=meta_parameters["noise"],
+                                     sigma=0.0,
                                      flatten=flatten)
 
     # get the ground_truth observation data

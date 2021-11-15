@@ -1,6 +1,9 @@
 __pycache__/
 sbi-logs/
 results/
+figures/
 *.out
 *.err
 *.zip
+*.pdf
+*.pkl
