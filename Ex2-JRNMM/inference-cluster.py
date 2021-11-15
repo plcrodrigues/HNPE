@@ -1,7 +1,7 @@
 from functools import partial
 import torch
-from sbi_workforce.misc import make_label
-from sbi_workforce.inference import run_inference
+from hnpe.misc import make_label
+from hnpe.inference import run_inference
 from posterior import build_flow, IdentityJRNMM
 from summary import summary_JRNMM
 from simulator import prior_JRNMM, simulator_JRNMM, get_ground_truth

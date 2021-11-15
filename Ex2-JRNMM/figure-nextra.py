@@ -1,7 +1,7 @@
 
 import torch
 import matplotlib.pyplot as plt
-from sbi_workforce.misc import make_label
+from hnpe.misc import make_label
 from posterior import build_flow, IdentityJRNMM
 from summary import summary_JRNMM
 from viz import get_posterior
@@ -29,6 +29,7 @@ LIST_THETA = [[135.0, 220.0, 2000.0, 0.0],
               [135.0, 110.0, 1000.0, 0.0],
               [135.0, 220.0, 1000.0, 0.0]
               ]
+
 
 def boilerplate(theta, nextra, naive, aggregate=True, round_idx=0):
 
