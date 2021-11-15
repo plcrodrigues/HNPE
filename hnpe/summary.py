@@ -1,8 +1,6 @@
 import torch
 import torch.fft
 from torch import nn
-from scipy.signal import welch
-import numpy as np
 
 
 # it calculates the biased or unbiased autocorrelation function
@@ -175,19 +173,17 @@ class PowerSpecDens(nn.Module):
         ntrials = X.shape[0]
         ns = X.shape[1]
         nfreqs = 2*(self.nbins-1) + 1
-        windows = [wi + torch.arange(nfreqs) for wi in range(0, 
-                                                             ns-nfreqs+1, 
+        windows = [wi + torch.arange(nfreqs) for wi in range(0,
+                                                             ns-nfreqs+1,
                                                              int(nfreqs/2))]
         S = []
         for i in range(ntrials):
-            Xi = X[i,:].view(-1)
+            Xi = X[i, :].view(-1)
             Si = []
             for w in windows:
                 Si.append(torch.abs(torch.fft.rfft(Xi[w]))**2)
             Si = torch.mean(torch.stack(Si), axis=0)
             if self.logscale:
-                Si = torch.log10(Si)            
+                Si = torch.log10(Si)
             S.append(Si)
         return torch.stack(S)
-
-        

@@ -2,7 +2,8 @@ import torch
 
 # Imports for the SBI package
 from pyknos.nflows.distributions import base
-from sbi.utils.get_nn_models import build_nsf, build_maf
+from sbi.utils.get_nn_models import build_nsf
+
 
 class IdentityToyModel(torch.nn.Module):
     def __init__(self):
@@ -75,7 +76,7 @@ class ToyModelFlow_factorized_nflows(base.Distribution):
                            z_score_x=z_score_theta,
                            z_score_y=z_score_x,
                            embedding_net=embedding_net_1,
-                           num_transforms=5)                        
+                           num_transforms=5)
 
         self._flow_1 = flow_1
 
@@ -188,7 +189,7 @@ def build_flow(batch_theta, batch_x, embedding_net=torch.nn.Identity(),
     if naive:
         flow = ToyModelFlow_naive_nflows(batch_theta,
                                          batch_x,
-                                         embedding_net, 
+                                         embedding_net,
                                          aggregate=aggregate)
     else:
         flow = ToyModelFlow_factorized_nflows(batch_theta,

@@ -7,13 +7,15 @@ from sbi.utils import get_log_root
 from torch.utils.tensorboard import SummaryWriter
 from datetime import datetime
 
+
 def summary_plcr(prefix):
     logdir = Path(
         get_log_root(),
         prefix,
         datetime.now().isoformat().replace(":", "_"),
     )
-    return SummaryWriter(logdir)    
+    return SummaryWriter(logdir)
+
 
 def run_inference(simulator, prior, build_nn_posterior, ground_truth,
                   meta_parameters, summary_extractor=None, save_rounds=False,

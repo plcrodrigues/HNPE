@@ -6,10 +6,12 @@ from functools import partial
 
 torch.autograd.set_detect_anomaly(True)
 
+
 class FourierLayer(nn.Module):
     def __init__(self, nfreqs=129):
         super().__init__()
         self.nfreqs = nfreqs
+
     def forward(self, X):
         if X.ndim == 1:
             X = X.view(1, -1)
@@ -20,18 +22,21 @@ class FourierLayer(nn.Module):
         _, Xfourier = welch(Xnumpy, nperseg=2*(self.nfreqs-1))
         return X.new_tensor(Xfourier)
 
+
 class fourier_embedding(nn.Module):
-    def __init__(self, d_out=1, n_time_samples=1024, plcr=True, logscale=False):
+    def __init__(self, d_out=1, n_time_samples=1024, plcr=True,
+                 logscale=False):
         super().__init__()
         self.d_out = d_out
-        if plcr: # use my implementation for power spectral density
+        if plcr:  # use my implementation for power spectral density
             self.net = PowerSpecDens(nbins=d_out, logscale=logscale)
-        else: # use implementation from scipy.signal.welch (much slower)
+        else:  # use implementation from scipy.signal.welch (much slower)
             self.net = FourierLayer(nfreqs=d_out)
 
     def forward(self, x):
         y = self.net(x.view(1, -1))
         return y
+
 
 class autocorr_embedding(nn.Module):
     def __init__(self, d_out=1, n_time_samples=1024):
@@ -63,13 +68,14 @@ class identity(nn.Module):
     def forward(self, x):
         return x
 
+
 class debug_embedding(nn.Module):
     def __init__(self, d_out=1, n_time_samples=1024):
         super().__init__()
         self.net = nn.Linear(in_features=n_time_samples, out_features=d_out)
 
     def forward(self, x):
-        y = self.net(x.view(1,-1))
+        y = self.net(x.view(1, -1))
         # A = torch.ones(33, 1024)
         # y = A * x
         return y

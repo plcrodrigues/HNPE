@@ -39,7 +39,7 @@ def get_posterior(simulator, prior, summary_extractor, build_nn_posterior,
 def display_posterior(posterior, prior, ground_truth):
 
     samples = posterior.sample((10000,), sample_with_mcmc=False)
-    xlim = [[prior.support.base_constraint.lower_bound[i], 
+    xlim = [[prior.support.base_constraint.lower_bound[i],
              prior.support.base_constraint.upper_bound[i]]
             for i in range(len(prior.support.base_constraint.lower_bound))]
     if 'theta' in ground_truth:

@@ -22,8 +22,8 @@ def get_posterior(simulator, prior, build_nn_posterior, meta_parameters,
                                       batch_x=batch_x)
     nn_posterior.eval()
     posterior = DirectPosterior(
-        method_family="snpe", 
-        neural_net=nn_posterior, 
+        method_family="snpe",
+        neural_net=nn_posterior,
         prior=prior,
         x_shape=ground_truth["observation"].shape
     )

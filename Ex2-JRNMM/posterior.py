@@ -5,6 +5,7 @@ import torch
 from sbi.utils.get_nn_models import build_maf
 from pyknos.nflows.distributions import base
 
+
 class AggregateInstances(torch.nn.Module):
     def __init__(self, mean=True):
 
@@ -20,12 +21,14 @@ class AggregateInstances(torch.nn.Module):
                 xagg = x[:, :, 1:].mean(dim=2)  # n_batch, n_embed
                 x = torch.cat([xobs, xagg], dim=1)  # n_batch, 2*n_embed
                 return x
-            else:                
+            else:
                 return x.view(len(x), -1)
+
 
 class IdentityJRNMM(torch.nn.Module):
     def __init__(self):
         super().__init__()
+
     def forward(self, x, n_extra=0):
         return x
 
@@ -64,7 +67,7 @@ class JRNMMFlow_nflows_base(base.Distribution):
         super().__init__()
 
         embedding_net = torch.nn.Sequential(
-            embedding_net, 
+            embedding_net,
             AggregateInstances(mean=aggregate)
         )
         self._embedding_net = embedding_net
@@ -108,7 +111,7 @@ class JRNMMFlow_nflows_factorized(base.Distribution):
         # create a new net that embeds all n+1 observations and then aggregates
         # n of them via a sum operation
         embedding_net_1 = torch.nn.Sequential(
-            embedding_net, 
+            embedding_net,
             AggregateInstances(mean=True)
         )
         self._embedding_net_1 = embedding_net_1
@@ -181,11 +184,11 @@ class JRNMMFlow_nflows_factorized(base.Distribution):
         context_1 = context
         # shape (n_samples, 1)
         samples_flow_1 = self._flow_1.sample(num_samples, context_1)[0]
-        context_2 = torch.cat([context[:, :, 0].repeat(num_samples, 1), 
-                               samples_flow_1], dim=1) 
-        context_2 = self._flow_2._embedding_net(context_2)   
+        context_2 = torch.cat([context[:, :, 0].repeat(num_samples, 1),
+                               samples_flow_1], dim=1)
+        context_2 = self._flow_2._embedding_net(context_2)
         noise = self._flow_2._distribution.sample(num_samples)
-        samples_flow_2, _ = self._flow_2._transform.inverse(noise, 
+        samples_flow_2, _ = self._flow_2._transform.inverse(noise,
                                                             context=context_2)
 
         samples = torch.cat([samples_flow_2, samples_flow_1], dim=1)

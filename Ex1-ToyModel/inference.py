@@ -13,14 +13,14 @@ from simulator import simulator_ToyModel, prior_ToyModel, get_ground_truth
 
 """
 In this example, we consider the ToyModel setting in which the simulator has
-two input parameters [alpha, beta] and generates x = alpha * beta^gamma + eps, 
+two input parameters [alpha, beta] and generates x = alpha * beta^gamma + eps,
 where gamma is a fixed known parameter of the simulator, and eps is a Gaussian
 white noise with standard deviation sigma. Because the observation is a product
-of two parameters, we may expect an indeterminacy when trying to estimate them 
-from a given observation xo. To try and break this, we consider that each xo is 
-accompanied by a few other observations x1, ..., xN which all share the same 
-parameter beta but with different values for alpha. Our goal then is to use 
-this extra information to obtain the posterior distribution of 
+of two parameters, we may expect an indeterminacy when trying to estimate them
+from a given observation xo. To try and break this, we consider that each x0 is
+accompanied by a few other observations x1, ..., xN which all share the same
+parameter beta but with different values for alpha. Our goal then is to use
+this extra information to obtain the posterior distribution of
 p(alpha, beta | x0, x1, ..., xN)
 """
 
@@ -44,7 +44,7 @@ if __name__ == "__main__":
     parser.add_argument('--naive', action='store_true',
                         help='Use naive posterior estimation.')
     parser.add_argument('--aggregate', action='store_true',
-                        help='Aggregate the extra observations.')                        
+                        help='Aggregate the extra observations.')
     parser.add_argument('--round', '-r', type=int, default=0,
                         help='Show results from previous inference run.')
     parser.add_argument('--nextra', '-n', type=int, default=0,
