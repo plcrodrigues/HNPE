@@ -1,7 +1,7 @@
 import torch
 from torch import nn
 from scipy.signal import welch
-from sbi_workforce.summary import YuleNet, AutocorrSeq, PowerSpecDens
+from hnpe.summary import YuleNet, AutocorrSeq, PowerSpecDens
 from functools import partial
 
 torch.autograd.set_detect_anomaly(True)
