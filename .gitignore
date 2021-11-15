@@ -8,3 +8,4 @@ figures/
 *.pdf
 *.pkl
 *egg-info/
+.vscode/
