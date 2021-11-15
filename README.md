@@ -43,7 +43,7 @@ To obtain an approximation of the posterior distribution of our toy model when o
 
 > python inference.py
 
-This will create an approximation of the posterior distribution and store the parameters of the normalizing flow in `/results`
+This creates an approximation of the posterior distribution and stores its parameters in `/results`
 
 To check the results, you can simply enter
 
