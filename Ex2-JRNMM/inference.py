@@ -1,16 +1,27 @@
 from functools import partial
 
 import torch
-from torch import nn
-from sbi import utils as sbi_utils
-
-from sbi_workforce.misc import make_label
-from sbi_workforce.inference import run_inference
+from hnpe.misc import make_label
+from hnpe.inference import run_inference
 
 from posterior import build_flow, IdentityJRNMM
 from summary import summary_JRNMM
 from viz import get_posterior, display_posterior
 from simulator import prior_JRNMM, simulator_JRNMM, get_ground_truth
+
+"""
+In this example, we consider the Jansen-Rit neural mass model. This is a well
+known non-linear model from computational neuroscience literature used for 
+modeling the generation of EEG signals in cortical columns. The model consists 
+of four parameters: three of them describing the internal physiological 
+properties of the cortical column and one parameter related to the attenuation
+effect of having a neural activity that propagates through brain tissue before
+being measured by an EEG electrode. The model is non-injective when we consider
+a single observation x0, but things start to converge (i.e. the posterior
+contracts) once we consider several additional observations that share the same
+gain parameter as x0. In practice, this means having several recordings from
+the same subject at different moments.
+"""
 
 if __name__ == "__main__":
     import argparse

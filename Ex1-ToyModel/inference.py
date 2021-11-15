@@ -13,14 +13,15 @@ from simulator import simulator_ToyModel, prior_ToyModel, get_ground_truth
 
 """
 In this example, we consider the ToyModel setting in which the simulator has
-two input parameters [alpha, beta] and generates x = alpha * beta^gamma, where
-gamma is a fixed known parameter of the simulator. Because the observation is
-a product of two parameters, we may expect an indeterminacy when trying to
-estimate them from a given observation xo. To try and break this, we consider
-that each xo is accompanied by a few other observations x1, ..., xN which all
-share the same parameter beta but with different values for alpha. Our goal
-then is to use this extra information to obtain the posterior distribution
-of p(alpha, beta | x0, x1, ..., xN)
+two input parameters [alpha, beta] and generates x = alpha * beta^gamma + eps, 
+where gamma is a fixed known parameter of the simulator, and eps is a Gaussian
+white noise with standard deviation sigma. Because the observation is a product
+of two parameters, we may expect an indeterminacy when trying to estimate them 
+from a given observation xo. To try and break this, we consider that each xo is 
+accompanied by a few other observations x1, ..., xN which all share the same 
+parameter beta but with different values for alpha. Our goal then is to use 
+this extra information to obtain the posterior distribution of 
+p(alpha, beta | x0, x1, ..., xN)
 """
 
 if __name__ == "__main__":
@@ -61,17 +62,10 @@ if __name__ == "__main__":
         maxepochs = 0
         saverounds = True
     else:
-        nrd = 5
+        nrd = 2
         nsr = 10_000
         maxepochs = None
         saverounds = True
-
-    # run example with the chosen parameters
-    if torch.cuda.is_available():
-        device = "cuda"
-    else:
-        device = "cpu"
-    print("Using device:", device)
 
     # setup the parameters for the example
     meta_parameters = {}
@@ -140,7 +134,7 @@ if __name__ == "__main__":
                                    meta_parameters=meta_parameters,
                                    summary_extractor=summary_net,
                                    save_rounds=saverounds,
-                                   device=device,
+                                   device='cpu',
                                    max_num_epochs=maxepochs)
 
     else:

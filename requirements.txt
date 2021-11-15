@@ -1,0 +1,9 @@
+torch==1.9.0
+submitit==1.2.1
+sbi_workforce.egg==info
+sbi==0.15.1
+rpy2==3.3.3
+numpy==1.20.3
+matplotlib==3.2.2
+scipy==1.7.1
+pyknos==0.14.2

@@ -7,3 +7,4 @@ figures/
 *.zip
 *.pdf
 *.pkl
+*egg-info/

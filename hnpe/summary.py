@@ -190,38 +190,4 @@ class PowerSpecDens(nn.Module):
             S.append(Si)
         return torch.stack(S)
 
-if __name__ == '__main__':
-
-    # input 
-    from alphawaves.dataset import AlphaWaves
-    import mne
-    dataset = AlphaWaves(useMontagePosition=False)
-    subject = dataset.subject_list[1]
-    raw = dataset._get_single_subject_data(subject)
-    fmin = 3
-    fmax = 40
-    raw.filter(fmin, fmax, verbose=False)
-    raw.resample(sfreq=128, verbose=False)
-    events = mne.find_events(raw=raw, shortest_event=1, verbose=False)
-    event_id = {'closed': 1, 'open': 2}
-    epochs = mne.Epochs(raw, events, event_id, tmin=2.0, tmax=8.0, baseline=None,
-                        verbose=False)
-    epochs.load_data().pick_channels(['Oz'])
-    X_closed = epochs['closed'].get_data()
-    X_closed = torch.tensor(X_closed).view(len(X_closed), -1)
-    X_open = epochs['open'].get_data()
-    X_open = torch.tensor(X_open).view(len(X_open), -1)
-    X = torch.cat([X_open, X_closed])
-
-    #  output
-    summary_net = PowerSpecDens(nbins=33)
-    S = summary_net(X)
-
-    # plot
-    import matplotlib.pyplot as plt
-    fig, ax = plt.subplots(figsize=(12, 5)) 
-    colors = {1:'red', 2:'blue'}
-    for Si, yi in zip(S, epochs.events[:,2]):
-        ax.plot(Si, color=colors[yi])
-    fig.show()
         
