@@ -1,6 +1,5 @@
 torch==1.9.0
 submitit==1.2.1
-sbi_workforce.egg==info
 sbi==0.15.1
 rpy2==3.3.3
 numpy==1.20.3
