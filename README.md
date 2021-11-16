@@ -1,5 +1,7 @@
 # HNPE: Hierarchical Neural Posterior Estimation
 
+[![Install](https://github.com/plcrodrigues/HNPE/actions/workflows/test_install.yml/badge.svg)](https://github.com/plcrodrigues/HNPE/actions/workflows/test_install.yml)
+
 ## What you will find here
 
 This repository contains code related to the method we have proposed in our
