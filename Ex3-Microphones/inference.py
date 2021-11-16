@@ -20,8 +20,8 @@ if __name__ == "__main__":
                         help='Ground truth value for u-coordinate.')
     parser.add_argument('--v', '-v', type=float, default=0.5,
                         help='Ground truth value for v-coordinate.')
-    parser.add_argument('--sigma', '-s', type=float, default=0.00,
-                        help='Level of noise on the observation.')                        
+    parser.add_argument('--sigma', type=float, default=0.00,
+                        help='Level of noise on the observation.')
     parser.add_argument('--summary', '-s', type=str, default='Identity',
                         help='Architecture used to compute summary features.')
     parser.add_argument('--viz', action='store_true',
@@ -78,7 +78,7 @@ if __name__ == "__main__":
     # number of summary features to consider
     meta_parameters["n_sf"] = args.dout
     # which density estimator to use (maf/mdn/nsf)
-    meta_parameters["density"] = 'maf'
+    meta_parameters["density"] = 'nsf'
     # how much noise to consider on the output
     meta_parameters["sigma"] = args.sigma
     # which coordinate to consider as global
