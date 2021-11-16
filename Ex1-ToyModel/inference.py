@@ -51,8 +51,8 @@ if __name__ == "__main__":
                         help='How many extra observations to consider.')
     parser.add_argument('--ntrials', '-t', type=int, default=1,
                         help='How many trials to consider.')
-
     parser.add_argument('--dry', action='store_true')
+
     args = parser.parse_args()
 
     if args.dry:
@@ -60,7 +60,7 @@ if __name__ == "__main__":
         nrd = 1
         nsr = 10
         maxepochs = 0
-        saverounds = True
+        saverounds = False
     else:
         nrd = 2
         nsr = 10_000
@@ -83,7 +83,7 @@ if __name__ == "__main__":
     meta_parameters["noise"] = args.noise
     # which example case we are considering here
     meta_parameters["case"] = ''.join([
-        f"Flow/ToyModel_",
+        "Flow/ToyModel_",
         f"naive_{args.naive}_",
         f"ntrials_{meta_parameters['n_trials']:02}_",
         f"nextra_{meta_parameters['n_extra']:02}_",
