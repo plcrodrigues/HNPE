@@ -1,0 +1,7 @@
+# pyproject.toml
+[build-system]
+requires = [
+  "setuptools>=45", # https://github.com/pypa/setuptools/issues/2312
+  "oldest-supported-numpy", # https://github.com/scipy/oldest-supported-numpy
+]
+build-backend = "setuptools.build_meta"
