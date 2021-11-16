@@ -2,7 +2,7 @@
 from tqdm import tqdm
 import torch
 import matplotlib.pyplot as plt
-from sbi_workforce.misc import make_label
+from hnpe.misc import make_label
 from posterior import build_flow, IdentityJRNMM
 from summary import summary_JRNMM
 from viz import get_posterior

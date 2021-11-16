@@ -1,7 +1,7 @@
 from functools import partial
 import torch
-from sbi_workforce.misc import make_label
-from sbi_workforce.inference import run_inference
+from hnpe.misc import make_label
+from hnpe.inference import run_inference
 import numpy as np
 from posterior import build_flow, IdentityToyModel
 from simulator import simulator_ToyModel, prior_ToyModel, get_ground_truth
