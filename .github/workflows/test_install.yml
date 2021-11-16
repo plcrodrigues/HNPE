@@ -1,0 +1,59 @@
+name: Install
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  create:
+    tags:
+      - '**'
+  schedule:
+    # Run every day at 8:42am UTC.
+    - cron:  '42 8 * * *'
+
+jobs:
+  test_install:
+    name: Test Install
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            version_python: 3.7
+          - os: ubuntu-latest
+            version_python: 3.8
+          - os: macos-latest
+            version_python: 3.8
+          - os: windows-latest
+            version_python: 3.8
+    env:
+      CONDA_ENV: 'testcondaenv'
+      VERSION_PYTHON: ${{ matrix.version_python }}
+
+    defaults:
+      run:
+        # Need to use this shell to get cond working properly.
+        # See https://github.com/marketplace/actions/setup-miniconda#important
+        shell: bash -l {0}
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Conda
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+          activate-environment: ${{ env.CONDA_ENV }}
+          python-version: ${{ matrix.version_python }}
+          # Use miniforge to only get conda-forge as default channel.
+          miniforge-version: latest
+
+      - name: Install hnpe and its dependencies
+        run: |
+          conda install -yq pip
+          pip install -e .
+      - name: Run Toy model
+        run: |
+          cd Ex1-ToyModel
+          python inference.py --dry
