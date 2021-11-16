@@ -1,10 +1,10 @@
 from functools import partial
 
 import torch
+import matplotlib.pyplot as plt
 
 from hnpe.misc import make_label
 from hnpe.inference import run_inference
-import matplotlib.pyplot as plt
 
 from viz import get_posterior
 from viz import display_posterior

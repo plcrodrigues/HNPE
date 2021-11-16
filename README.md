@@ -4,20 +4,20 @@
 
 This repository contains code related to the method we have proposed in our [NeurIPS 2021](https://openreview.net/forum?id=E8BxwYR8op) paper 
 
-> P Rodrigues, T Moreau, G Louppe, A Gramfort "*HNPE: Leveraging Global Parameters for Neural Posterior Estimation*". 
+> P Rodrigues, T Moreau, G Louppe, A Gramfort "*HNPE: Leveraging Global Parameters for Neural Posterior Estimation*". Proc. Advances in Neural Information Processing Systems (NeurIPS) 34, 2021
 
 We have included basic code for reproducing the two numerical illustrations presented in the paper:
 
 - A toy model for which we can derive all analytic properties of the posterior distribution
 - The Jansen-Rit neural mass model that we have used to relate physiological parameters to real EEG signals
 
-Most of our code is based on the wonderful `sbi` package, available here: https://github.com/mackelab/sbi
+Most of our code is based on the wonderful [`sbi` package](https://github.com/mackelab/sbi).
 
 ## Setup
 
-Clone the github repository on your local computer, and install the package by running:
+Clone the GitHub repository on your local computer, and install the package by running:
 
-```
+```bash
 python setup.py develop
 ```
 
@@ -25,13 +25,13 @@ All dependencies are listed in `requirements.txt` for your interest.
 
 To ensure that your code finds the right scripts, open a python shell and type:
 
-```
+```python
 import hnpe
 ```
 
-Note that you might want to create a *virtual environment* before doing all these installations, e.g.:
+Note that you might want to create a *conda environment* before doing all these installations, e.g.:
 
-```
+```bash
 conda create -n hnpe_env
 ```
 
@@ -41,26 +41,36 @@ conda create -n hnpe_env
 
 To obtain an approximation of the posterior distribution of our toy model when only one observation is available and no noise is added to it, you should go to `Ex1-ToyModel` and enter in your terminal 
 
-> python inference.py
+```bash
+python inference.py
+```
 
 This creates an approximation of the posterior distribution and stores its parameters in `/results`
 
 To check the results, you can simply enter
 
-> python inference.py --viz
+```bash
+python inference.py --viz
+```
 
 Now if you would like to see what happens to the posterior distribution when *N = 10* extra observations are available, you should enter
 
-> python inference.py --nextra 10
+```bash
+python inference.py --nextra 10
+```
 
 To include noise in the observations, you should run, for instance,
 
-> python inference.py --nextra 10 --noise 0.05
+```bash
+python inference.py --nextra 10 --noise 0.05
+```
 
 The way of doing things for `Ex2-JRNMM` is exactly the same, except for a few choices of input parameters. 
 
 Please do
 
-> python inference.py --help
+```bash
+python inference.py --help
+```
 
 for a list of all options available for each example.

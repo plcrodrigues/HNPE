@@ -1,11 +1,12 @@
-import torch
-import numpy as np
+from datetime import datetime
 from pathlib import Path
+
+import numpy as np
+import torch
+from torch.utils.tensorboard import SummaryWriter
 
 from sbi import inference as sbi_inference
 from sbi.utils import get_log_root
-from torch.utils.tensorboard import SummaryWriter
-from datetime import datetime
 
 
 def summary_plcr(prefix):
