@@ -1,8 +1,10 @@
 from pathlib import Path
+
 import matplotlib.pyplot as plt
+import torch
+
 from sbi import utils as sbi_utils
 from sbi.inference.posteriors.direct_posterior import DirectPosterior
-import torch
 
 
 def get_posterior(simulator, prior, summary_extractor, build_nn_posterior,

@@ -1,5 +1,5 @@
-from sbi.utils import BoxUniform
 import torch
+from sbi.utils import BoxUniform
 
 
 class prior_ToyModel(BoxUniform):
