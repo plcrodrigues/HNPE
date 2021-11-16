@@ -32,7 +32,7 @@ python -c 'import hnpe'
 Note that you might want to create a *conda environment* before doing all these installations, e.g.:
 
 ```bash
-conda create -n hnpe_env python=3
+conda create -n hnpe_env python=3.7
 ```
 
 ## Usage
