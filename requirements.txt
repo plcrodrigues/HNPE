@@ -1,8 +1,0 @@
-matplotlib
-numpy
-pyknos
-rpy2
-sbi
-scipy
-setuptools
-torch
