@@ -3,22 +3,22 @@ from functools import partial
 import torch
 import numpy as np
 import viz
-import joblib
 from hnpe.misc import make_label
 from posterior import build_flow, IdentityToyModel
 from simulator import simulator_ToyModel, prior_ToyModel, get_ground_truth
 import matplotlib.pyplot as plt
-from tqdm import tqdm
 import matplotlib as mpl
+import seaborn as sns
+import pandas as pd
+
+
 mpl.rcParams['text.usetex'] = True
 mpl.rcParams['axes.labelsize'] = 18
 mpl.rcParams['axes.titlesize'] = 20
 mpl.rcParams['xtick.labelsize'] = 14
 mpl.rcParams['ytick.labelsize'] = 14
-mpl.rcParams['legend.title_fontsize'] = 18 
+mpl.rcParams['legend.title_fontsize'] = 18
 plt.rc('legend', fontsize=14)
-import seaborn as sns
-import pandas as pd
 
 seed = 1024
 torch.manual_seed(seed)
@@ -36,6 +36,7 @@ for xn, nextra in zip(x, LIST_NEXTRA):
 # cmap = sns.color_palette()
 # for i, nextra in enumerate(LIST_NEXTRA):
 #     colors[nextra] = cmap[i]
+
 
 def get_posterior(alpha, beta, gamma, nextra, ntrials, noise, naive, round_idx=0):
 
@@ -74,7 +75,7 @@ def get_posterior(alpha, beta, gamma, nextra, ntrials, noise, naive, round_idx=0
 
     # set prior distribution for the parameters
     prior = prior_ToyModel(low=torch.tensor([0.0, 0.0]),
-                        high=torch.tensor([1.0, 1.0]))
+                           high=torch.tensor([1.0, 1.0]))
 
     # choose how to setup the simulator
     simulator = partial(simulator_ToyModel,
@@ -104,6 +105,7 @@ def get_posterior(alpha, beta, gamma, nextra, ntrials, noise, naive, round_idx=0
 
     posterior.set_default_x(ground_truth['observation'])
     return posterior
+
 
 def make_figure_static(noise, show=False):
 
@@ -157,6 +159,7 @@ def make_figure_static(noise, show=False):
     plt.savefig(f'figure-static-noise_{noise:.2f}.pdf', format='pdf')
     if show:
         fig.show()
+
 
 def make_figure_dynamic(noise):
 
