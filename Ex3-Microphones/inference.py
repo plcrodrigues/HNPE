@@ -67,7 +67,8 @@ if __name__ == "__main__":
          f"nextra_{meta_parameters['n_extra']:02}_",
          f"u_{meta_parameters['theta'][0]:.2f}_",
          f"v_{meta_parameters['theta'][1]:.2f}_",
-         f"global_coord_{args.globalcoord}"])
+         f"global_coord_{args.globalcoord}_",
+         f"sigma_{args.sigma:.2f}"])
     if meta_parameters["rotation"] > 0.00:
         meta_parameters["case"] = meta_parameters["case"] + \
             f"_rotation_{args.rotation:.2f}"
