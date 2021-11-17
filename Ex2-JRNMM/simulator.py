@@ -59,7 +59,7 @@ class prior_JRNMM(BoxUniform):
 
 
 def simulator_JRNMM(theta, input_parameters, t_recording, n_extra=0,
-                    p_gain=None):
+                    p_gain=None, fix_gain=False):
     """Define the simulator function
 
     Parameters
@@ -75,6 +75,9 @@ def simulator_JRNMM(theta, input_parameters, t_recording, n_extra=0,
     p_gain : torch.distribution
         probability distribution from which to sample the different values of
         [C, mu, sigma] for a given gain (only used when n_extra > 0)
+    fix_gain : bool
+        whether the gain parameter should remain fixed, meaning we that we do
+        inference only on three parameters
 
     Returns
     -------
@@ -88,7 +91,8 @@ def simulator_JRNMM(theta, input_parameters, t_recording, n_extra=0,
                                input_parameters,
                                t_recording,
                                n_extra,
-                               p_gain)
+                               p_gain,
+                               fix_gain)
 
     x = []
     xextra = []
@@ -103,7 +107,8 @@ def simulator_JRNMM(theta, input_parameters, t_recording, n_extra=0,
                 gaini = thetai[i]
 
         xi = simulate_jansen_rit_StrangSplitting(t_recording,
-                                                 JRNMM_parameters_i)
+                                                 JRNMM_parameters_i,
+                                                 fix_gain=fix_gain)
         xi = xi - np.mean(xi)
         x.append(xi)
 
@@ -140,7 +145,7 @@ def simulator_JRNMM(theta, input_parameters, t_recording, n_extra=0,
 
 
 def simulate_jansen_rit_StrangSplitting(trecording, parameters,
-                                        x0=None):
+                                        x0=None, fix_gain=False):
 
     if x0 is None:
         x0 = np.random.randn(6)
@@ -169,7 +174,11 @@ def simulate_jansen_rit_StrangSplitting(trecording, parameters,
     r = float(parameters['r'])
     s4 = float(parameters['s4'])
     s6 = float(parameters['s6'])
-    gain_db = float(parameters['gain'])
+
+    if fix_gain:
+        gain_db = float(0.0)
+    else:
+        gain_db = float(parameters['gain'])
     gain_abs = 10**(gain_db/10)
 
     startv = robjects.FloatVector(list(x0))

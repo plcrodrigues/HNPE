@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 import joblib
+import os
 
 
 mpl.rcParams['text.usetex'] = True
@@ -226,35 +227,44 @@ def plot_hyperbole():
 # plot_posterior_single(N=0)
 # plot_posterior_single(N=18)
 
-# set prior distribution for the parameters
-prior = prior_SourceLocalization(low=torch.tensor([0.0, 0.0]),
-                                 high=torch.tensor([2.0, 2.0]))
+LIST_NEXTRA = list(np.unique(np.logspace(0, 3, 20, dtype=int)))[:-1]
 
-LIST_NEXTRA = [0] + list(np.unique(np.logspace(0, 3, 20, dtype=int)))[:-1]
-LIST_THETA = prior.sample((100,))
+filepath = 'make_figure_distance.pkl'
+if os.path.exists(filepath):
+    distance = joblib.load(filepath)
+else:
+    # set prior distribution for the parameters
+    prior = prior_SourceLocalization(low=torch.tensor([0.0, 0.0]),
+                                     high=torch.tensor([2.0, 2.0]))
+    LIST_THETA = prior.sample((100,))
+    n_samples = 10_000
+    distance = {}
+    for globalcoord in ['u', 'v']:
+        distance[globalcoord] = np.zeros((len(LIST_THETA), len(LIST_NEXTRA)))
+        for i in tqdm(range(len(LIST_THETA))):
+            u0, v0 = LIST_THETA[i]
+            for j, N in enumerate(LIST_NEXTRA):
+                posterior = boilerplate(N, globalcoord=globalcoord, 
+                                        u0=u0, v0=v0)
+                samples = posterior.sample(
+                    (n_samples,),
+                    sample_with_mcmc=False,
+                    show_progress_bars=False)
+                biasN = torch.mean((samples - torch.tensor([u0, v0]))**2,
+                                   dim=0)
+                varcN = torch.var(samples, dim=0)
+                distance[globalcoord][i, j] = float(
+                    torch.sum(biasN) + torch.sum(varcN))
 
-n_samples = 10_000
-distance = {}
+    joblib.dump(distance, 'make_figure_distance.pkl')
+
+fig, ax = plt.subplots(figsize=(6.5, 6.1))
 for globalcoord in ['u', 'v']:
-    distance[globalcoord] = np.zeros((len(LIST_THETA), len(LIST_NEXTRA)))
-    for i in tqdm(range(len(LIST_THETA))):
-        u0, v0 = LIST_THETA[i]
-        for j, N in enumerate(LIST_NEXTRA):
-            posterior = boilerplate(N, globalcoord=globalcoord, u0=u0, v0=v0)
-            samples = posterior.sample(
-                (n_samples,),
-                sample_with_mcmc=False,
-                show_progress_bars=False)
-            biasN = torch.mean((samples - torch.tensor([u0, v0]))**2, dim=0)
-            varcN = torch.var(samples, dim=0)
-            distance[globalcoord][i, j] = float(
-                torch.sum(biasN) + torch.sum(varcN))
-
-joblib.dump(distance, 'make_figure_distance.pkl')
-
-# fig, ax = plt.subplots(figsize=(6.5, 6.1))
-# for globalcoord in ['u', 'v']:
-#     ax.plot(LIST_NEXTRA, distance[globalcoord], lw=2.0, label=globalcoord)
-# ax.set_xscale('log')
-# ax.legend()
-# fig.show()
+    distance_avg = np.median(distance[globalcoord], axis=0)[1:]
+    ax.plot(LIST_NEXTRA, distance_avg, lw=2.0, label=globalcoord)
+ax.set_xscale('log')
+ax.set_yscale('log')
+ax.set_xticks([1, 10, 100, 1000])
+ax.set_xlim([1, 1000])
+ax.legend()
+fig.show()
