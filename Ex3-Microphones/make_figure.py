@@ -43,7 +43,8 @@ def boilerplate(nextra, globalcoord='u', u0=0.50, v0=0.50, sigma=0.00,
          f"nextra_{meta_parameters['n_extra']:02}_",
          f"u_{meta_parameters['theta'][0]:.2f}_",
          f"v_{meta_parameters['theta'][1]:.2f}_",
-         f"global_coord_{globalcoord}"])
+         f"global_coord_{globalcoord}_",
+         f"sigma_{sigma:.2f}"])
     if meta_parameters["rotation"] > 0.00:
         meta_parameters["case"] = meta_parameters["case"] + \
             f"_rotation_{rotation:.2f}"
@@ -100,7 +101,7 @@ def boilerplate(nextra, globalcoord='u', u0=0.50, v0=0.50, sigma=0.00,
 
 # plot two posterior distributions: one with a single observation and the other
 # with N additional observations
-def plot_posterior_two_nextra(N, globalcoord):
+def plot_posterior_two_nextra(N, globalcoord, show=False):
 
     n_samples = 1_000
     u0, v0 = 1.00, 1.00
@@ -116,9 +117,9 @@ def plot_posterior_two_nextra(N, globalcoord):
     colors = {0: 'C0', N: 'C1'}
     fig, ax = plt.subplots(figsize=(6.5, 6.1))
     df = pd.DataFrame()
-    df['x'] = np.concatenate([samples[0][:, 0].numpy(), 
+    df['x'] = np.concatenate([samples[0][:, 0].numpy(),
                               samples[N][:, 0].numpy()])
-    df['y'] = np.concatenate([samples[0][:, 1].numpy(), 
+    df['y'] = np.concatenate([samples[0][:, 1].numpy(),
                               samples[N][:, 1].numpy()])
     df['N'] = np.array(n_samples*[0] + n_samples*[N])
 
@@ -142,16 +143,19 @@ def plot_posterior_two_nextra(N, globalcoord):
     ax.scatter(-1, 0, s=150, c='C2')
     ax.scatter(+1, 0, s=150, c='C2')
 
-    fig.show()
+    fig.savefig(f'figure-posterior-two-nextra-global-coord_{globalcoord}.pdf',
+                format='pdf')
+    if show:
+        fig.show()
 
 
 # plot the posterior distribution with a single observation
-def plot_posterior_single(N=0):
+def plot_posterior_single(N=0, globalcoord='u', show=False):
 
     n_samples = 1_000
     u0, v0 = 1.00, 1.00
     samples = {}
-    posterior = boilerplate(N, u0=u0, v0=v0)
+    posterior = boilerplate(N, globalcoord=globalcoord, u0=u0, v0=v0)
     samples[N] = posterior.sample(
         (n_samples,),
         sample_with_mcmc=False,
@@ -173,7 +177,12 @@ def plot_posterior_single(N=0):
     ax.set_ylim(-2, 2)
     ax.set_xlabel(r'$u$', fontsize=22)
     ax.set_ylabel(r'$v$', fontsize=22)
-    ax.set_title(r'$p(u, v | x)$', fontsize=22)
+
+    if N > 0:
+        ax.set_title(r'$p(u, v | x, \mathcal{X})$', fontsize=22)
+    else:
+        ax.set_title(r'$p(u, v | x)$', fontsize=22)
+
     # change all spines
     for axis in ['top', 'bottom', 'left', 'right']:
         ax.spines[axis].set_linewidth(1)
@@ -185,11 +194,14 @@ def plot_posterior_single(N=0):
     ax.axvline(x=0, ls='--', c='k', lw=1.0)
     ax.axhline(y=0, ls='--', c='k', lw=1.0)
 
-    fig.show()
+    fig.savefig(f'figure-posterior-single-global-coord_{globalcoord}.pdf', 
+                format='pdf')
+    if show:
+        fig.show()
 
 
 # plot the hyperbole showing with the analytic posterior distribution
-def plot_hyperbole():
+def plot_hyperbole(show=False):
 
     def get_itd(theta):
         m1 = np.array([-1, 0])
@@ -200,7 +212,7 @@ def plot_hyperbole():
     u0, v0 = 1.00, 1.00
     theta = torch.tensor([u0, v0])
     x = get_itd(theta)
-    varray = np.linspace(-2, +2, 100)
+    varray = np.linspace(0, +2, 100)
     hyperbola = np.sqrt((varray**2)*((x/2)**2)/(1-(x/2)**2)+(x/2)**2)
 
     fig, ax = plt.subplots(figsize=(6.5, 6.1))
@@ -219,52 +231,57 @@ def plot_hyperbole():
     ax.set_ylim(-2, 2)
     ax.set_xlabel(r'$u$', fontsize=22)
     ax.set_ylabel(r'$v$', fontsize=22)
+
     ax.set_title(r'$p(u, v | x)$', fontsize=22)
-    fig.show()
+
+    fig.savefig('figure-hyperbole.pdf', format='pdf')
+    if show:
+        fig.show()
 
 
-# plot_hyperbole()
+plot_hyperbole()
 # plot_posterior_single(N=0)
-# plot_posterior_single(N=18)
+# plot_posterior_single(N=18, globalcoord='u')
+# plot_posterior_single(N=18, globalcoord='v')
 
-LIST_NEXTRA = list(np.unique(np.logspace(0, 3, 20, dtype=int)))[:-1]
+# LIST_NEXTRA = list([0] + np.unique(np.logspace(0, 3, 20, dtype=int)))[:-2]
 
-filepath = 'make_figure_distance.pkl'
-if os.path.exists(filepath):
-    distance = joblib.load(filepath)
-else:
-    # set prior distribution for the parameters
-    prior = prior_SourceLocalization(low=torch.tensor([0.0, 0.0]),
-                                     high=torch.tensor([2.0, 2.0]))
-    LIST_THETA = prior.sample((100,))
-    n_samples = 10_000
-    distance = {}
-    for globalcoord in ['u', 'v']:
-        distance[globalcoord] = np.zeros((len(LIST_THETA), len(LIST_NEXTRA)))
-        for i in tqdm(range(len(LIST_THETA))):
-            u0, v0 = LIST_THETA[i]
-            for j, N in enumerate(LIST_NEXTRA):
-                posterior = boilerplate(N, globalcoord=globalcoord, 
-                                        u0=u0, v0=v0)
-                samples = posterior.sample(
-                    (n_samples,),
-                    sample_with_mcmc=False,
-                    show_progress_bars=False)
-                biasN = torch.mean((samples - torch.tensor([u0, v0]))**2,
-                                   dim=0)
-                varcN = torch.var(samples, dim=0)
-                distance[globalcoord][i, j] = float(
-                    torch.sum(biasN) + torch.sum(varcN))
+# filepath = 'make_figure_distance.pkl'
+# if os.path.exists(filepath):
+#     distance = joblib.load(filepath)
+# else:
+#     # set prior distribution for the parameters
+#     prior = prior_SourceLocalization(low=torch.tensor([0.0, 0.0]),
+#                                      high=torch.tensor([2.0, 2.0]))
+#     LIST_THETA = prior.sample((10,))
+#     n_samples = 10_000
+#     distance = {}
+#     for globalcoord in ['u', 'v']:
+#         distance[globalcoord] = np.zeros((len(LIST_THETA), len(LIST_NEXTRA)))
+#         for i in tqdm(range(len(LIST_THETA))):
+#             u0, v0 = LIST_THETA[i]
+#             for j, N in enumerate(LIST_NEXTRA):
+#                 posterior = boilerplate(N, globalcoord=globalcoord, 
+#                                         u0=u0, v0=v0)
+#                 samples = posterior.sample(
+#                     (n_samples,),
+#                     sample_with_mcmc=False,
+#                     show_progress_bars=False)
+#                 biasN = torch.mean((samples - torch.tensor([u0, v0]))**2,
+#                                    dim=0)
+#                 varcN = torch.var(samples, dim=0)
+#                 distance[globalcoord][i, j] = float(
+#                     torch.sum(biasN) + torch.sum(varcN))
 
-    joblib.dump(distance, 'make_figure_distance.pkl')
+#     joblib.dump(distance, 'make_figure_distance.pkl')
 
-fig, ax = plt.subplots(figsize=(6.5, 6.1))
-for globalcoord in ['u', 'v']:
-    distance_avg = np.median(distance[globalcoord], axis=0)[1:]
-    ax.plot(LIST_NEXTRA, distance_avg, lw=2.0, label=globalcoord)
-ax.set_xscale('log')
-ax.set_yscale('log')
-ax.set_xticks([1, 10, 100, 1000])
-ax.set_xlim([1, 1000])
-ax.legend()
-fig.show()
+# fig, ax = plt.subplots(figsize=(6.5, 6.1))
+# for globalcoord in ['u', 'v']:
+#     distance_avg = np.mean(distance[globalcoord], axis=0)
+#     ax.plot(LIST_NEXTRA, distance_avg, lw=2.0, label=globalcoord)
+# ax.set_xscale('log')
+# ax.set_yscale('log')
+# ax.set_xticks([1, 10, 100, 1000])
+# ax.set_xlim([1, 1000])
+# ax.legend()
+# fig.show()

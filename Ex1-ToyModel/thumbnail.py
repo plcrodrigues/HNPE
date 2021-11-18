@@ -83,7 +83,7 @@ def get_posterior(alpha, beta, gamma, nextra, ntrials, noise, naive, round_idx=0
                         n_trials=meta_parameters["n_trials"],
                         p_alpha=prior,
                         gamma=meta_parameters["gamma"],
-                        sigma=meta_parameters["noise"])
+                        sigma=0.00)
 
     # choose the ground truth observation to consider in the inference
     ground_truth = get_ground_truth(meta_parameters, p_alpha=prior)
@@ -161,6 +161,48 @@ def make_figure_static(noise, show=False):
         fig.show()
 
 
+def make_figure_static_single(N, noise, show=False):
+
+    nsamples = 1_000
+    naive = False
+
+    posterior = get_posterior(
+        alpha=0.50, beta=0.50, gamma=1.00, 
+        nextra=N, ntrials=1, noise=noise, naive=naive, round_idx=1)
+
+    samples = posterior.sample(
+        (nsamples,), 
+        sample_with_mcmc=False, 
+        show_progress_bars=False)
+
+    fig, ax = plt.subplots(figsize=(6.5, 6.1))
+    df = pd.DataFrame()
+    df['x'] = samples[:,0].numpy()
+    df['y'] = samples[:,1].numpy()
+    sns.kdeplot(
+        data=df, x='x', y='y', color=colors[N], 
+        legend=False, levels=5, ax=ax, common_norm=False)
+    ax.set_xticks([0, 0.2, 0.4, 0.6, 0.8, 1.0])
+    ax.set_xticklabels([0, 0.2, 0.4, 0.6, 0.8, 1.0], fontsize=18)
+    ax.set_yticks([0, 0.2, 0.4, 0.6, 0.8, 1.0])
+    ax.set_yticklabels([0, 0.2, 0.4, 0.6, 0.8, 1.0], fontsize=18)
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, 1)
+    ax.set_xlabel(r'$\alpha$', fontsize=22)
+    ax.set_ylabel(r'$\beta$', fontsize=22)
+    # change all spines
+    for axis in ['top','bottom','left','right']:
+        ax.spines[axis].set_linewidth(1)
+    # increase tick width
+    ax.tick_params(width=1)
+    ax.scatter(0.5, 0.5, marker='*', s=200, c='k', zorder=10)
+
+    plt.savefig(f'figure-static-noise_{noise:.2f}-single-N_{N}.pdf', format='pdf')
+
+    if show:
+        fig.show()
+
+
 def make_figure_dynamic(noise):
 
     nsamples = 1_000
@@ -169,9 +211,11 @@ def make_figure_dynamic(noise):
     @gif.frame
     def plot(samples_dict, nextra, final=False):
 
+        cm = 1/2.54
+
         if not final:
 
-            fig, ax = plt.subplots(figsize=(6.5, 6.1))
+            fig, ax = plt.subplots(figsize=(14.45*cm, 13.14*cm))
             df = pd.DataFrame()
             df['x'] = samples_dict[nextra][:,0].numpy()
             df['y'] = samples_dict[nextra][:,1].numpy()
@@ -198,7 +242,7 @@ def make_figure_dynamic(noise):
 
         else:
 
-            fig, ax = plt.subplots(figsize=(6.5, 6.1))
+            fig, ax = plt.subplots(figsize=(14.45*cm, 13.14*cm))
             df = pd.DataFrame()
             df['x'] = np.concatenate([samples_dict[0][:,0].numpy(), samples_dict[nextra][:,0].numpy()])
             df['y'] = np.concatenate([samples_dict[0][:,1].numpy(), samples_dict[nextra][:,1].numpy()])
@@ -247,6 +291,11 @@ def make_figure_dynamic(noise):
 
     gif.save(frames, f'figure-dynamic-noise_{noise:.2f}.gif', duration=500)
 
-for noise in [0.00, 0.05]:
-    make_figure_static(noise=noise)
-    make_figure_dynamic(noise=noise)
+# for noise in [0.00, 0.05]:
+#     make_figure_static(noise=noise)
+#     make_figure_dynamic(noise=noise)
+
+# make_figure_static_single(N=500, noise=0.00, show=True)
+# make_figure_static(noise=0.05)
+
+make_figure_dynamic(noise=0.00)
