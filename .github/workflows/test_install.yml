@@ -57,3 +57,12 @@ jobs:
         run: |
           cd Ex1-ToyModel
           python inference.py --dry
+      - name: Install JRNMM
+        run: |
+          pwd
+          cd Ex2-JRNMM
+          . install_JRNMM.sh
+      - name: Run JRNMM model
+        run: |
+          cd Ex2-JRNMM
+          python inference.py --dry
