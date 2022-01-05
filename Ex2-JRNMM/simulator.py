@@ -59,7 +59,7 @@ class prior_JRNMM(BoxUniform):
 
 
 def simulator_JRNMM(theta, input_parameters, t_recording, n_extra=0,
-                    p_gain=None):
+                    p_gain=None, n_time_samples=1024):  ## changed 
     """Define the simulator function
 
     Parameters
@@ -88,7 +88,8 @@ def simulator_JRNMM(theta, input_parameters, t_recording, n_extra=0,
                                input_parameters,
                                t_recording,
                                n_extra,
-                               p_gain)
+                               p_gain,
+                               n_time_samples)  ## changed
 
     x = []
     xextra = []
@@ -103,7 +104,8 @@ def simulator_JRNMM(theta, input_parameters, t_recording, n_extra=0,
                 gaini = thetai[i]
 
         xi = simulate_jansen_rit_StrangSplitting(t_recording,
-                                                 JRNMM_parameters_i)
+                                                 JRNMM_parameters_i,
+                                                 n_time_samples)  ## changed
         xi = xi - np.mean(xi)
         x.append(xi)
 
@@ -121,7 +123,7 @@ def simulator_JRNMM(theta, input_parameters, t_recording, n_extra=0,
                     JRNMM_parameters_j[p] = thetaj[i]
 
             xj = simulate_jansen_rit_StrangSplitting(
-                t_recording, JRNMM_parameters_j
+                t_recording, JRNMM_parameters_j, n_time_samples  ## changed
             )
             xj = xj - np.mean(xj)
 
@@ -139,8 +141,8 @@ def simulator_JRNMM(theta, input_parameters, t_recording, n_extra=0,
         return torch.cat([x, xextra], dim=-1)
 
 
-def simulate_jansen_rit_StrangSplitting(trecording, parameters,
-                                        x0=None):
+def simulate_jansen_rit_StrangSplitting(trecording, parameters, n_time_samples, ## changed
+                                        x0=None): 
 
     if x0 is None:
         x0 = np.random.randn(6)
@@ -152,7 +154,7 @@ def simulate_jansen_rit_StrangSplitting(trecording, parameters,
 
     burnin = 2.0
     T = trecording  # time interval for the datasets
-    h = 1/2**10  # time step (corresponds to Delta)
+    h = 1/n_time_samples  # time step (corresponds to Delta)  ##changed
 
     # theta_true: parameters used to simulate the reference data
     sigma = float(parameters['sigma'])
@@ -183,7 +185,7 @@ def simulate_jansen_rit_StrangSplitting(trecording, parameters,
     ))
     X = X[int(burnin/h):]
     X = X[::8]
-
+    
     return X
 
 
@@ -215,9 +217,10 @@ if __name__ == "__main__":
     meta_parameters["t_recording"] = 8
     prior = prior_JRNMM(parameters=[('C', 10.0, 250.0),
                                     ('gain', -10.0, +10.0)])
-    theta = prior.sample((3,))
+    theta = prior.sample((1,))
     x = simulator_JRNMM(
         theta, input_parameters=['C', 'gain'],
         t_recording=meta_parameters["t_recording"],
         n_extra=meta_parameters["n_extra"], p_gain=prior
     )
+    print(x.shape)

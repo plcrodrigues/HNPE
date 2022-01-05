@@ -51,4 +51,5 @@ def display_posterior(posterior, prior, ground_truth):
         )
     else:
         fig, ax = sbi_utils.pairplot(samples, limits=xlim)
-    plt.show()
+    # plt.show()
+    return fig, ax
