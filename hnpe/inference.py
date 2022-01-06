@@ -21,7 +21,7 @@ def summary_plcr(prefix):
 def run_inference(simulator, prior, build_nn_posterior, ground_truth,
                   meta_parameters, summary_extractor=None, save_rounds=False,
                   seed=42, device="cpu", num_workers=1, max_num_epochs=None,
-                  stop_after_epochs=20, training_batch_size=100):
+                  stop_after_epochs=20, training_batch_size=100, aggregate_before=None): ## added aggregate_before
 
     # set seed for numpy and torch
     np.random.seed(seed)
@@ -65,6 +65,12 @@ def run_inference(simulator, prior, build_nn_posterior, ground_truth,
         # extract summary features
         if summary_extractor is not None:
             x = summary_extractor(x)
+        
+        ## ------- added --------- ##
+        # standardize data and aggregate extra observations
+        if aggregate_before is not None:
+            x = aggregate_before(x)
+        ## ----------------------- ##
 
         # train the neural posterior with the loaded data
         nn_posterior = inference.append_simulations(theta, x).train(

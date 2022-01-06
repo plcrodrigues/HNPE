@@ -2,6 +2,7 @@ __pycache__/
 sbi-logs/
 results/
 figures/
+plots/
 *.out
 *.err
 *.zip
@@ -9,3 +10,4 @@ figures/
 *.pkl
 *egg-info/
 .vscode/
+*.Rhistory

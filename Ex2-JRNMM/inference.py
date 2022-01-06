@@ -1,4 +1,5 @@
 from functools import partial
+import matplotlib.pyplot as plt
 
 import torch
 from hnpe.misc import make_label
@@ -52,6 +53,8 @@ if __name__ == "__main__":
                         help='Use the naive posterior or not.')
     parser.add_argument('--aggregate', action='store_true',
                         help='Aggregate the extra observations in posterior.')
+    parser.add_argument('--trecording', type=int, default=8,
+                    help='How many seconds the simulator should have.')
 
     args = parser.parse_args()
 
@@ -100,7 +103,7 @@ if __name__ == "__main__":
     # number of summary features to consider
     meta_parameters["n_sf"] = 33
     # how many seconds the simulations should have (fs = 128 Hz)
-    meta_parameters["t_recording"] = 8
+    meta_parameters["t_recording"] = args.trecording
     meta_parameters["n_ss"] = int(128 * meta_parameters["t_recording"])
     # label to attach to the SNPE procedure and use for saving files
     meta_parameters["label"] = make_label(meta_parameters)
@@ -165,4 +168,6 @@ if __name__ == "__main__":
             simulator, prior, summary_extractor, build_nn_posterior,
             meta_parameters, round_=args.round
         )
-        display_posterior(posterior, prior, ground_truth)
+        fig, ax = display_posterior(posterior, prior, ground_truth)
+        # plt.show()
+        plt.savefig(f'pairplot_round{args.round}_nextra{meta_parameters["n_extra"]}.png')

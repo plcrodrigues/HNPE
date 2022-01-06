@@ -8,7 +8,7 @@ from hnpe.inference import run_inference
 
 from viz import get_posterior
 from viz import display_posterior
-from posterior import build_flow, IdentityToyModel
+from posterior import build_flow, IdentityToyModel, StandardizeAndAggregate
 from simulator import simulator_ToyModel, prior_ToyModel, get_ground_truth
 
 """
@@ -52,7 +52,10 @@ if __name__ == "__main__":
     parser.add_argument('--ntrials', '-t', type=int, default=1,
                         help='How many trials to consider.')
     parser.add_argument('--dry', action='store_true')
-
+    ## -------------------- added -------------------------- ##
+    parser.add_argument('--aggregate_before', action='store_true', # sets z_scoring within the flow to Flase.
+                        help='Normalize data and aggregate the extra observations before training')
+    ## ----------------------------------------------------- ##
     args = parser.parse_args()
 
     if args.dry:
@@ -90,7 +93,10 @@ if __name__ == "__main__":
         f"alpha_{meta_parameters['theta'][0]:.2f}_",
         f"beta_{meta_parameters['theta'][1]:.2f}_",
         f"gamma_{meta_parameters['gamma']:.2f}_",
-        f"noise_{meta_parameters['noise']:.2f}"])
+        f"noise_{meta_parameters['noise']:.2f}_",
+        ## ----- added ----- ##
+        f"agg_before_{args.aggregate_before}"]) 
+        ## ----------------- ##
     # number of rounds to use in the SNPE procedure
     meta_parameters["n_rd"] = nrd
     # number of simulations per round
@@ -118,11 +124,20 @@ if __name__ == "__main__":
     # choose how to get the summary features
     summary_net = IdentityToyModel()
 
+    ## ------------------ added -------------------- ##
+    # choose to standardize and aggregate extra observations before training 
+    if args.aggregate_before:
+        aggregate_before = StandardizeAndAggregate()
+    else:
+        aggregate_before = None
+    ## --------------------------------------------- ##
+
     # choose a function which creates a neural network density estimator
     build_nn_posterior = partial(build_flow,
                                  embedding_net=summary_net,
                                  naive=args.naive,
-                                 aggregate=args.aggregate)
+                                 aggregate=args.aggregate,
+                                 aggregate_before=args.aggregate_before) ## added argument aggregate_before
 
     # decide whether to run inference or viz the results from previous runs
     if not args.viz:
@@ -135,7 +150,8 @@ if __name__ == "__main__":
                                    summary_extractor=summary_net,
                                    save_rounds=saverounds,
                                    device='cpu',
-                                   max_num_epochs=maxepochs)
+                                   max_num_epochs=maxepochs,
+                                   aggregate_before=aggregate_before) ## added argument aggregate_before
 
     else:
         posterior = get_posterior(
@@ -143,4 +159,5 @@ if __name__ == "__main__":
             meta_parameters, round_=args.round
         )
         fig, ax = display_posterior(posterior, prior)
-        plt.show()
+        # plt.show()
+        plt.savefig(f'pairplot_round{args.round}_nextra{args.nextra}.png')

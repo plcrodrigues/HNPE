@@ -3,7 +3,7 @@ import torch
 # Imports for the SBI package
 from pyknos.nflows.distributions import base
 from sbi.utils.get_nn_models import build_nsf
-
+from sbi.utils.sbiutils import standardizing_net
 
 class IdentityToyModel(torch.nn.Module):
     def __init__(self):
@@ -24,6 +24,18 @@ class AggregateInstances(torch.nn.Module):
             xagg = x[:, 1:].mean(dim=1)[:, None]  # n_batch, n_embed
             x = torch.cat([xobs, xagg], dim=1)  # n_batch, 2*
         return x
+
+class StandardizeAndAggregate(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, x):
+        standardize = standardizing_net(x.mean(dim=1))
+        x_norm = standardize(x.mean(dim=1))[:,:,None].permute(0,-1,1)
+        x0_norm = x_norm[:,:,0][:,None].view(-1,1,1)
+        xn_norm = x_norm[:,:,1:].mean(dim=2)[:,None].view(-1,1,1)
+        x_norm_agg = torch.cat([x0_norm, xn_norm], dim=2)
+        return x_norm_agg
 
 
 class StackContext(torch.nn.Module):
@@ -63,7 +75,7 @@ class ToyModelFlow_factorized_nflows(base.Distribution):
         # create a new net that embeds all n+1 observations and then aggregates
         # n of them via a sum operation
         embedding_net_1 = torch.nn.Sequential(
-            embedding_net, AggregateInstances(aggregate=(batch_x.shape[1] > 1))
+            embedding_net, AggregateInstances(aggregate=batch_x.shape[2] > 1) ## changed: fixed bugg to aggragate if nextra>1
         )
         self._embedding_net_1 = embedding_net_1
 
@@ -185,15 +197,17 @@ class ToyModelFlow_naive_nflows(base.Distribution):
 
 
 def build_flow(batch_theta, batch_x, embedding_net=torch.nn.Identity(),
-               naive=False, aggregate=True):
+               naive=False, aggregate=True, aggregate_before=False): ## added argument aggregate_before
     if naive:
         flow = ToyModelFlow_naive_nflows(batch_theta,
                                          batch_x,
                                          embedding_net,
                                          aggregate=aggregate)
     else:
+        ## changed to set z_score to False if already standardized before training
         flow = ToyModelFlow_factorized_nflows(batch_theta,
                                               batch_x,
-                                              embedding_net)
+                                              embedding_net,
+                                              z_score_x= not aggregate_before) 
 
     return flow
