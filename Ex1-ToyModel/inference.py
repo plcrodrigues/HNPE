@@ -128,6 +128,7 @@ if __name__ == "__main__":
     # choose to standardize and aggregate extra observations before training 
     if args.aggregate_before:
         aggregate_before = StandardizeAndAggregate()
+        ground_truth['observation'] = aggregate_before(ground_truth['observation'])
     else:
         aggregate_before = None
     ## --------------------------------------------- ##
