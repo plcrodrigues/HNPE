@@ -53,8 +53,10 @@ if __name__ == "__main__":
                         help='How many trials to consider.')
     parser.add_argument('--dry', action='store_true')
     ## -------------------- added -------------------------- ##
-    parser.add_argument('--aggregate_before', action='store_true', # sets z_scoring within the flow to Flase.
-                        help='Normalize data and aggregate the extra observations before training')
+    parser.add_argument('--aggregate_before', action='store_true', 
+                        help='Aggregate the extra observations before training')
+    parser.add_argument('--norm_before', action='store_true', 
+                        help='Normalize data and groundtruth before training')
     ## ----------------------------------------------------- ##
     args = parser.parse_args()
 
@@ -95,7 +97,8 @@ if __name__ == "__main__":
         f"gamma_{meta_parameters['gamma']:.2f}_",
         f"noise_{meta_parameters['noise']:.2f}_",
         ## ----- added ----- ##
-        f"agg_before_{args.aggregate_before}"]) 
+        f"agg_before_{args.aggregate_before}_",
+        f"norm_before_{args.norm_before}"])
         ## ----------------- ##
     # number of rounds to use in the SNPE procedure
     meta_parameters["n_rd"] = nrd
@@ -127,10 +130,9 @@ if __name__ == "__main__":
     ## ------------------ added -------------------- ##
     # choose to standardize and aggregate extra observations before training 
     if args.aggregate_before:
-        aggregate_before = StandardizeAndAggregate()
-        ground_truth['observation'] = aggregate_before(ground_truth['observation'])
+        build_aggregate_before = partial(StandardizeAndAggregate, standardize=args.norm_before) 
     else:
-        aggregate_before = None
+        build_aggregate_before = None
     ## --------------------------------------------- ##
 
     # choose a function which creates a neural network density estimator
@@ -138,7 +140,9 @@ if __name__ == "__main__":
                                  embedding_net=summary_net,
                                  naive=args.naive,
                                  aggregate=args.aggregate,
-                                 aggregate_before=args.aggregate_before) ## added argument aggregate_before
+                                 ## added argument z_score
+                                 z_score_x=not args.norm_before) #normbef_no_zscore
+                                #  z_score_x=args.aggregate_before) #normbef_zscore
 
     # decide whether to run inference or viz the results from previous runs
     if not args.viz:
@@ -152,7 +156,7 @@ if __name__ == "__main__":
                                    save_rounds=saverounds,
                                    device='cpu',
                                    max_num_epochs=maxepochs,
-                                   aggregate_before=aggregate_before) ## added argument aggregate_before
+                                   build_aggregate_before=build_aggregate_before) ## added argument build_aggregate_before
 
     else:
         posterior = get_posterior(

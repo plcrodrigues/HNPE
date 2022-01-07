@@ -8,7 +8,6 @@ from torch.utils.tensorboard import SummaryWriter
 from sbi import inference as sbi_inference
 from sbi.utils import get_log_root
 
-
 def summary_plcr(prefix):
     logdir = Path(
         get_log_root(),
@@ -21,7 +20,7 @@ def summary_plcr(prefix):
 def run_inference(simulator, prior, build_nn_posterior, ground_truth,
                   meta_parameters, summary_extractor=None, save_rounds=False,
                   seed=42, device="cpu", num_workers=1, max_num_epochs=None,
-                  stop_after_epochs=20, training_batch_size=100, aggregate_before=None): ## added aggregate_before
+                  stop_after_epochs=20, training_batch_size=100, build_aggregate_before=None): ## added build_aggregate_before
 
     # set seed for numpy and torch
     np.random.seed(seed)
@@ -67,9 +66,11 @@ def run_inference(simulator, prior, build_nn_posterior, ground_truth,
             x = summary_extractor(x)
         
         ## ------- added --------- ##
-        # standardize data and aggregate extra observations
-        if aggregate_before is not None:
+        # standardize data wrt x and aggregate extra observations
+        if build_aggregate_before is not None:
+            aggregate_before = build_aggregate_before(x_ref=x) # standardize data wrt x
             x = aggregate_before(x)
+            ground_truth_obs = aggregate_before(ground_truth["observation"])
         ## ----------------------- ##
 
         # train the neural posterior with the loaded data
@@ -91,6 +92,6 @@ def run_inference(simulator, prior, build_nn_posterior, ground_truth,
             posterior.net.save_state(path)
 
         # set the proposal prior for the next round
-        proposal = posterior.set_default_x(ground_truth['observation'])
+        proposal = posterior.set_default_x(ground_truth_obs)
 
     return posteriors

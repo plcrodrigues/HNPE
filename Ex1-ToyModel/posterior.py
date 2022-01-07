@@ -26,16 +26,18 @@ class AggregateInstances(torch.nn.Module):
         return x
 
 class StandardizeAndAggregate(torch.nn.Module):
-    def __init__(self):
+    def __init__(self, x_ref, standardize = True):
         super().__init__()
+        self.standardize_net = standardizing_net(x_ref.mean(dim=1))
+        self.standardize = standardize
 
     def forward(self, x):
-        standardize = standardizing_net(x.mean(dim=1))
-        x_norm = standardize(x.mean(dim=1))[:,:,None].permute(0,-1,1)
-        x0_norm = x_norm[:,:,0][:,None].view(-1,1,1)
-        xn_norm = x_norm[:,:,1:].mean(dim=2)[:,None].view(-1,1,1)
-        x_norm_agg = torch.cat([x0_norm, xn_norm], dim=2)
-        return x_norm_agg
+        if self.standardize:
+            x = self.standardize_net(x.mean(dim=1))[:,:,None].permute(0,-1,1)
+        x0 = x[:,:,0][:,None].view(-1,1,1)
+        xn = x[:,:,1:].mean(dim=2)[:,None].view(-1,1,1)
+        x_agg = torch.cat([x0, xn], dim=2)
+        return x_agg
 
 
 class StackContext(torch.nn.Module):
@@ -197,7 +199,7 @@ class ToyModelFlow_naive_nflows(base.Distribution):
 
 
 def build_flow(batch_theta, batch_x, embedding_net=torch.nn.Identity(),
-               naive=False, aggregate=True, aggregate_before=False): ## added argument aggregate_before
+               naive=False, aggregate=True, z_score_x = True): ## added argument z_score_x
     if naive:
         flow = ToyModelFlow_naive_nflows(batch_theta,
                                          batch_x,
@@ -208,6 +210,6 @@ def build_flow(batch_theta, batch_x, embedding_net=torch.nn.Identity(),
         flow = ToyModelFlow_factorized_nflows(batch_theta,
                                               batch_x,
                                               embedding_net,
-                                              z_score_x= not aggregate_before) 
+                                              z_score_x= z_score_x) 
 
     return flow
