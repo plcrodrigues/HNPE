@@ -51,6 +51,7 @@ def run_inference(simulator, prior, build_nn_posterior, ground_truth,
     # loop over rounds
     posteriors = []
     proposal = prior
+    ground_truth_obs = ground_truth["observation"]
     for round_ in range(meta_parameters["n_rd"]):
 
         # simulate the necessary data
@@ -71,6 +72,8 @@ def run_inference(simulator, prior, build_nn_posterior, ground_truth,
             aggregate_before = build_aggregate_before(x_ref=x) # standardize data wrt x
             x = aggregate_before(x)
             ground_truth_obs = aggregate_before(ground_truth["observation"])
+        else:
+            aggregate_before = None
         ## ----------------------- ##
 
         # train the neural posterior with the loaded data
@@ -90,6 +93,11 @@ def run_inference(simulator, prior, build_nn_posterior, ground_truth,
         if save_rounds:
             path = folderpath / f"nn_posterior_round_{round_:02}.pkl"
             posterior.net.save_state(path)
+            # path = folderpath / f"ground_truth_obs_round_{round_:02}.pkl"
+            # torch.save(ground_truth_obs, path)
+            if aggregate_before is not None:
+                path = folderpath / f"norm_agg_before_net_round_{round_:02}.pkl"
+                torch.save(aggregate_before.state_dict(), path)
 
         # set the proposal prior for the next round
         proposal = posterior.set_default_x(ground_truth_obs)

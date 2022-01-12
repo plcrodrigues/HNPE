@@ -86,6 +86,10 @@ if __name__ == "__main__":
     meta_parameters["gamma"] = args.gamma
     # standard deviation of the noise added to the observations
     meta_parameters["noise"] = args.noise
+    # aggregate before or not 
+    meta_parameters["agg_before"] = args.aggregate_before
+    # normalize before or not 
+    meta_parameters["norm_before"] = args.norm_before
     # which example case we are considering here
     meta_parameters["case"] = ''.join([
         "Flow/ToyModel_",
@@ -97,8 +101,8 @@ if __name__ == "__main__":
         f"gamma_{meta_parameters['gamma']:.2f}_",
         f"noise_{meta_parameters['noise']:.2f}_",
         ## ----- added ----- ##
-        f"agg_before_{args.aggregate_before}_",
-        f"norm_before_{args.norm_before}"])
+        f"agg_before_{meta_parameters['agg_before']}_",
+        f"norm_before_{meta_parameters['norm_before']}"]) # _zscore_gtnextra1"])
         ## ----------------- ##
     # number of rounds to use in the SNPE procedure
     meta_parameters["n_rd"] = nrd
@@ -130,7 +134,7 @@ if __name__ == "__main__":
     ## ------------------ added -------------------- ##
     # choose to standardize and aggregate extra observations before training 
     if args.aggregate_before:
-        build_aggregate_before = partial(StandardizeAndAggregate, standardize=args.norm_before) 
+        build_aggregate_before = partial(StandardizeAndAggregate, standardize=meta_parameters['norm_before']) 
     else:
         build_aggregate_before = None
     ## --------------------------------------------- ##
@@ -141,8 +145,8 @@ if __name__ == "__main__":
                                  naive=args.naive,
                                  aggregate=args.aggregate,
                                  ## added argument z_score
-                                 z_score_x=not args.norm_before) #normbef_no_zscore
-                                #  z_score_x=args.aggregate_before) #normbef_zscore
+                                 z_score_x=not meta_parameters['norm_before']) #normbef_no_zscore
+                                #  z_score_x=args.norm_before) #normbef_zscore
 
     # decide whether to run inference or viz the results from previous runs
     if not args.viz:
@@ -161,8 +165,9 @@ if __name__ == "__main__":
     else:
         posterior = get_posterior(
             simulator, prior, build_nn_posterior,
-            meta_parameters, round_=args.round
+            meta_parameters, round_=args.round,
+            build_aggregate_before=build_aggregate_before
         )
         fig, ax = display_posterior(posterior, prior)
         # plt.show()
-        plt.savefig(f'pairplot_round{args.round}_nextra{args.nextra}.png')
+        plt.savefig(f'pairplot_round{args.round}_nextra{args.nextra}_agg_before_{args.aggregate_before}_norm_before_{args.norm_before}_zscore')
