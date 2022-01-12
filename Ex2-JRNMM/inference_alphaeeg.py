@@ -55,9 +55,11 @@ if __name__ == "__main__":
     parser.add_argument('--aggregate', action='store_true',
                         help='Aggregate the extra observations in posterior.')
     parser.add_argument('--trecording', type=int, default=8,
-                    help='How many seconds the simulator should have.')
+                    help='How many seconds the simulator should have.') ## changed
     parser.add_argument('--tmin', type=int, default=0,
                     help='Start time of the alphawaves-eeg epochs.')  ## changed
+    parser.add_argument('--c_event', type=str, default=None,
+                    help='Events chosen for the observed context in groundtruth: "closed", "open", "all" or None.')  ## changed
 
     args = parser.parse_args()
 
@@ -69,7 +71,7 @@ if __name__ == "__main__":
         nsr = 50_000
     
     # get oberved groundtruth data
-    aeeg_observation = get_alphaeeg_observation(tmin=args.tmin, tmax=args.trecording)
+    aeeg_observation = get_alphaeeg_observation(tmin=args.tmin, tmax=args.trecording, context_event = args.c_event)
 
     # setup the parameters for the example
     meta_parameters = {}
@@ -87,7 +89,7 @@ if __name__ == "__main__":
 
     # which example case we are considering here
     meta_parameters["case"] = "JRNMM_alphaeeg_nextra_{:02}_" \
-        "naive_{}_tmin_{}".format(meta_parameters["n_extra"],
+        "naive_{}_tmin_{}_subject_10".format(meta_parameters["n_extra"],
                              meta_parameters["naive"], 
                              args.tmin)
 

@@ -6,7 +6,7 @@ import torch
 import warnings
 warnings.filterwarnings("ignore")
 
-def get_alphaeeg_observation(tmin=2.0, tmax=8.0):
+def get_alphaeeg_observation(tmin=2.0, tmax=8.0, context_event=None):
     ''' Data consists of recordings taken from a public dataset (Cattan et al., 2018) 
     in which subjects were asked to keep their eyes open or closed during periods of 
     8 s (sampling frequency of 128 Hz). For one subject there are ten epochs (5 open eyes 
@@ -20,7 +20,7 @@ def get_alphaeeg_observation(tmin=2.0, tmax=8.0):
     dataset = AlphaWaves(useMontagePosition = False) # use useMontagePosition = False with recent mne versions
 
     # get the data from subject of interest
-    subject = dataset.subject_list[0]
+    subject = dataset.subject_list[9]
     raw = dataset._get_single_subject_data(subject)
 
     # filter data and resample
@@ -47,9 +47,15 @@ def get_alphaeeg_observation(tmin=2.0, tmax=8.0):
 
     # define the observed signal (x_0) and context (x_i) epochs 
     x_0 = torch.FloatTensor(epochs[mask].get_data()[:,0,:-1][:,:,None]).permute(2,1,0)  # first closed event 
-    context = torch.FloatTensor(epochs[~mask].get_data()[:,0,:-1][:,:,None]).permute(2,1,0)  # all other events
+    if context_event == None:
+        observation = x_0
+    else:
+        context = epochs[~mask]
+        if context_event != "all":
+            context = context[context_event]
+        context = torch.FloatTensor(context.get_data()[:,0,:-1][:,:,None]).permute(2,1,0)  # all other events
 
-    observation = torch.cat([x_0, context], dim=2)
+        observation = torch.cat([x_0, context], dim=2)
 
     return observation
     

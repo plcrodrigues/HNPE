@@ -213,7 +213,7 @@ if __name__ == "__main__":
 
     meta_parameters = {}
     meta_parameters["theta"] = torch.tensor([0.5, 0.5])
-    meta_parameters["n_extra"] = 2
+    meta_parameters["n_extra"] = 7
     meta_parameters["t_recording"] = 8
     prior = prior_JRNMM(parameters=[('C', 10.0, 250.0),
                                     ('gain', -10.0, +10.0)])
@@ -223,4 +223,26 @@ if __name__ == "__main__":
         t_recording=meta_parameters["t_recording"],
         n_extra=meta_parameters["n_extra"], p_gain=prior
     )
+
+    ## try aggregating before feeding to snpe to try different nextra between training and inference
+    from summary import summary_JRNMM
+    d_embedding=meta_parameters["n_sf"] = 33
+    n_time_samples=meta_parameters["n_ss"] = 1024
+    type_embedding=meta_parameters["summary"] = 'Fourier'
+    summary_extractor = summary_JRNMM(
+        n_extra=meta_parameters["n_extra"],
+        d_embedding=meta_parameters["n_sf"],
+        n_time_samples=meta_parameters["n_ss"],
+        type_embedding=meta_parameters["summary"])
+
+    # let's use the log power spectral density instead
+    summary_extractor.embedding.net.logscale = True
+    x = summary_extractor(x) # n_batch, n_embed, 1+nextra
+    print(x.shape)
+    xobs = x[:, :, 0][:,None].view(-1,d_embedding,1)  # n_batch, n_embed, 1
+    print(xobs.shape)
+    xagg = x[:, :, 1:].mean(dim=2)[:,None].view(-1,d_embedding,1)  # n_batch, n_embed, 1
+    print(xagg.shape)
+    x = torch.cat([xobs, xagg], dim=2)  # n_batch, n_embed, 2
+
     print(x.shape)
