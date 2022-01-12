@@ -86,7 +86,7 @@ def get_ground_truth(meta_parameters, p_alpha=None, flatten=False):
 
     theta = meta_parameters["theta"].clone()
     observation = simulator_ToyModel(theta,
-                                     n_extra=meta_parameters["n_extra"], 
+                                     n_extra=meta_parameters["n_extra"], # change for experiments where nextra varies between inference and training 
                                      n_trials=meta_parameters["n_trials"],
                                      p_alpha=p_alpha,
                                      gamma=meta_parameters["gamma"],

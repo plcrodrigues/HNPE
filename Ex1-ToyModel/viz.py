@@ -6,7 +6,7 @@ from sbi.inference.posteriors.direct_posterior import DirectPosterior
 
 
 def get_posterior(simulator, prior, build_nn_posterior, meta_parameters,
-                  round_=0, build_aggregate_before=None):
+                  round_=0, build_aggregate_before=None): 
 
     folderpath = Path.cwd() / "results" / meta_parameters["label"]
     print(folderpath)
@@ -15,19 +15,30 @@ def get_posterior(simulator, prior, build_nn_posterior, meta_parameters,
     ground_truth = torch.load(folderpath / "ground_truth.pkl",
                                 map_location="cpu")
 
+    ## --------------------------- added ------------------------------- ##
     if build_aggregate_before is not None:
-        aggregate_before = build_aggregate_before(x_ref=torch.zeros((meta_parameters["n_sr"], meta_parameters["n_trials"], meta_parameters["n_extra"]+1)))
+        aggregate_before = build_aggregate_before(x_ref=torch.zeros((
+            meta_parameters["n_sr"], 
+            meta_parameters["n_trials"], 
+            meta_parameters["n_extra"]+1)
+            ))
+        # load parameters (mean, std) defined based on training simulations
         path = folderpath / f"norm_agg_before_net_round_{round_:02}.pkl"
         aggregate_before.load_state_dict(torch.load(path))
+        # normalize and aggregate the groundtruth 
         ground_truth["observation"] = aggregate_before(ground_truth["observation"])
     else:
         aggregate_before = None
+    ## ----------------------------------------------------------------- ##
         
     # Construct posterior
     batch_theta = prior.sample((2,))
     batch_x = simulator(batch_theta)
+    ## ---------- added ----------- ##
+    # normalize and aggregate simulations 
     if aggregate_before is not None:
         batch_x = aggregate_before(batch_x)
+    ## ---------------------------- ##
 
     nn_posterior = build_nn_posterior(batch_theta=batch_theta,
                                       batch_x=batch_x)

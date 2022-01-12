@@ -206,7 +206,6 @@ def build_flow(batch_theta, batch_x, embedding_net=torch.nn.Identity(),
                                          embedding_net,
                                          aggregate=aggregate)
     else:
-        ## changed to set z_score to False if already standardized before training
         flow = ToyModelFlow_factorized_nflows(batch_theta,
                                               batch_x,
                                               embedding_net,

@@ -145,8 +145,10 @@ if __name__ == "__main__":
                                  naive=args.naive,
                                  aggregate=args.aggregate,
                                  ## added argument z_score
+                                 ## ---------- changed ------------ ##
                                  z_score_x=not meta_parameters['norm_before']) #normbef_no_zscore
                                 #  z_score_x=args.norm_before) #normbef_zscore
+                                ## -------------------------------- ##
 
     # decide whether to run inference or viz the results from previous runs
     if not args.viz:
@@ -160,7 +162,9 @@ if __name__ == "__main__":
                                    save_rounds=saverounds,
                                    device='cpu',
                                    max_num_epochs=maxepochs,
-                                   build_aggregate_before=build_aggregate_before) ## added argument build_aggregate_before
+                                   ## ------------- added ------------------- ##
+                                   build_aggregate_before=build_aggregate_before) 
+                                   ## --------------------------------------- ##
 
     else:
         posterior = get_posterior(
