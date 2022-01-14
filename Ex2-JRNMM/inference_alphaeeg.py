@@ -1,7 +1,6 @@
 from functools import partial
 import matplotlib.pyplot as plt
 
-import torch
 from hnpe.misc import make_label
 from hnpe.inference import run_inference
 
@@ -60,6 +59,8 @@ if __name__ == "__main__":
                     help='Start time of the alphawaves-eeg epochs.')  ## changed
     parser.add_argument('--c_event', type=str, default=None,
                     help='Events chosen for the observed context in groundtruth: "closed", "open", "all" or None.')  ## changed
+    parser.add_argument('--sub_id', type=int, default=0,
+                    help='subject id for ground-truth alphawaves eeg data.')  ## changed
 
     args = parser.parse_args()
 
@@ -71,7 +72,7 @@ if __name__ == "__main__":
         nsr = 50_000
     
     # get oberved groundtruth data
-    aeeg_observation = get_alphaeeg_observation(tmin=args.tmin, tmax=args.trecording, context_event = args.c_event)
+    aeeg_observation = get_alphaeeg_observation(subject_id = args.sub_id, tmin=args.tmin, tmax=args.trecording, context_event = args.c_event)
 
     # setup the parameters for the example
     meta_parameters = {}
@@ -89,9 +90,10 @@ if __name__ == "__main__":
 
     # which example case we are considering here
     meta_parameters["case"] = "JRNMM_alphaeeg_nextra_{:02}_" \
-        "naive_{}_tmin_{}_subject_10".format(meta_parameters["n_extra"],
+        "naive_{}_tmin_{}_subject_{}".format(meta_parameters["n_extra"],
                              meta_parameters["naive"], 
-                             args.tmin)
+                             args.tmin,
+                             args.sub_id)
 
     aggregate = args.aggregate
     if not aggregate and naive:

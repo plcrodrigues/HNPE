@@ -6,7 +6,7 @@ import torch
 import warnings
 warnings.filterwarnings("ignore")
 
-def get_alphaeeg_observation(tmin=2.0, tmax=8.0, context_event=None):
+def get_alphaeeg_observation(subject_id = 0, tmin=0.0, tmax=8.0, context_event=None):
     ''' Data consists of recordings taken from a public dataset (Cattan et al., 2018) 
     in which subjects were asked to keep their eyes open or closed during periods of 
     8 s (sampling frequency of 128 Hz). For one subject there are ten epochs (5 open eyes 
@@ -20,7 +20,7 @@ def get_alphaeeg_observation(tmin=2.0, tmax=8.0, context_event=None):
     dataset = AlphaWaves(useMontagePosition = False) # use useMontagePosition = False with recent mne versions
 
     # get the data from subject of interest
-    subject = dataset.subject_list[9]
+    subject = dataset.subject_list[subject_id]
     raw = dataset._get_single_subject_data(subject)
 
     # filter data and resample

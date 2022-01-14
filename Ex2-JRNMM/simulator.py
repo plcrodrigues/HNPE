@@ -197,7 +197,7 @@ def get_ground_truth(meta_parameters, input_parameters, p_gain=None):
         theta=meta_parameters["theta"],
         input_parameters=input_parameters,
         t_recording=meta_parameters["t_recording"],
-        n_extra=meta_parameters["n_extra"],
+        n_extra=meta_parameters["n_extra"], 
         p_gain=p_gain
     )
 
