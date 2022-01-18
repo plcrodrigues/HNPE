@@ -8,6 +8,8 @@ from torch.utils.tensorboard import SummaryWriter
 from sbi import inference as sbi_inference
 from sbi.utils import get_log_root
 
+from functools import partial
+
 def summary_plcr(prefix):
     logdir = Path(
         get_log_root(),
@@ -20,7 +22,7 @@ def summary_plcr(prefix):
 def run_inference(simulator, prior, build_nn_posterior, ground_truth,
                   meta_parameters, summary_extractor=None, save_rounds=False,
                   seed=42, device="cpu", num_workers=1, max_num_epochs=None,
-                  stop_after_epochs=20, training_batch_size=100, build_aggregate_before=None): ## added build_aggregate_before
+                  stop_after_epochs=20, training_batch_size=100, build_aggregate_before=None): 
 
     # set seed for numpy and torch
     np.random.seed(seed)
@@ -51,14 +53,17 @@ def run_inference(simulator, prior, build_nn_posterior, ground_truth,
     # loop over rounds
     posteriors = []
     proposal = prior
-    ground_truth_obs = ground_truth["observation"]
+    if ground_truth is not None:
+        ground_truth_obs = ground_truth["observation"]
+    
     for round_ in range(meta_parameters["n_rd"]):
-
+        
         # simulate the necessary data
         theta, x = sbi_inference.simulate_for_sbi(
             simulator, proposal, num_simulations=meta_parameters["n_sr"],
             num_workers=num_workers,
         )
+
         if 'cuda' in device:
             torch.cuda.empty_cache()
 
@@ -75,7 +80,6 @@ def run_inference(simulator, prior, build_nn_posterior, ground_truth,
         else:
             aggregate_before = None
         ## ----------------------- ##
-
         # train the neural posterior with the loaded data
         nn_posterior = inference.append_simulations(theta, x).train(
             num_atoms=10,
@@ -100,7 +104,8 @@ def run_inference(simulator, prior, build_nn_posterior, ground_truth,
                 torch.save(aggregate_before.state_dict(), path)
             ## ------------------------------------ ##
 
-        # set the proposal prior for the next round
-        proposal = posterior.set_default_x(ground_truth_obs)
+        if meta_parameters['n_rd'] > 1:
+            # set the proposal prior for the next round
+            proposal = posterior.set_default_x(ground_truth_obs)
 
     return posteriors
