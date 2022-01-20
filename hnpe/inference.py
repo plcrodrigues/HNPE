@@ -8,7 +8,7 @@ from torch.utils.tensorboard import SummaryWriter
 from sbi import inference as sbi_inference
 from sbi.utils import get_log_root
 
-from functools import partial
+from sbi.utils.sbiutils import standardizing_net
 
 def summary_plcr(prefix):
     logdir = Path(
@@ -70,6 +70,18 @@ def run_inference(simulator, prior, build_nn_posterior, ground_truth,
         # extract summary features
         if summary_extractor is not None:
             x = summary_extractor(x)
+
+        if (x[0].shape[0] == 3) and meta_parameters["norm_before"]:
+            print('norm_before')
+            x0_n = torch.cat([x[:,0].reshape(-1,1), x[:,2].reshape(-1,1)],dim=1)
+            stand = standardizing_net(x0_n)
+            x0_n = stand(x0_n)
+
+            x[:,0] = x0_n[:,0]
+            x[:,2] = x0_n[:,1]
+
+            path = folderpath / f"stand_net_round_{round_:02}.pkl"
+            torch.save(stand.state_dict(), path)
         
         ## ------- added --------- ##
         # standardize data wrt x and aggregate extra observations

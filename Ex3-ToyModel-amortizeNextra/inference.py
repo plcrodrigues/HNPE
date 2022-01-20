@@ -1,3 +1,4 @@
+from curses import meta
 from functools import partial
 
 import torch
@@ -7,9 +8,9 @@ from hnpe.misc import make_label
 from hnpe.inference import run_inference
 
 from viz import get_posterior
-from viz import display_posterior
+from viz import display_posterior, display_analytic_posterior, plot_2d_pdf_contours
 from posterior import build_flow, IdentityToyModel
-from simulator import simulator_ToyModel_amortizeNextra, prior_ToyModel, get_ground_truth
+from simulator import simulator_ToyModel_amortizeNextra, prior_ToyModel, get_ground_truth, preprocess_for_amortizeNextra
 
 from torch.distributions import Categorical
 
@@ -38,7 +39,7 @@ if __name__ == "__main__":
     parser.add_argument('--gamma', '-y', type=float, default=1.0,
                         help='Ground truth value for gamma.')
      ## ----------------------- added ----------------------------- ##
-    parser.add_argument('--gt_nextra', type=int, default=10,
+    parser.add_argument('--gt_nextra', type=int, default=0,
                         help='Ground truth value for nextra.')  
      ## ----------------------------------------------------------- ##               
     parser.add_argument('--noise', type=float, default=0.0,
@@ -68,7 +69,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    assert args.nextra_range !=0 , 'To amortize on nextra, the range of values cannot be zero.'
+    assert args.nextra_range !=0 , 'To amortize on nextra, the range of values cannot be zero or 1. It has to be at least 2.'
 
     if args.dry:
         # the dryrun serves just to check if all is well
@@ -80,7 +81,7 @@ if __name__ == "__main__":
         ## ------------ changed ----------------- ##
         nrd = 1 ## we use NPE not SNPE for amortization
         ## -------------------------------------- ##
-        nsr = 10
+        nsr = 10_000
         maxepochs = None
         saverounds = True
 
@@ -106,12 +107,19 @@ if __name__ == "__main__":
     meta_parameters["noise"] = args.noise
     # aggregate before or not 
     meta_parameters["agg_before"] = args.aggregate_before
-    # normalize before or not 
+    # whether to normalize x0 and xn before training intead of 
+    # zscore on x0,nextra,xn during training 
     meta_parameters["norm_before"] = args.norm_before
     # which example case we are considering here
-    meta_parameters["case"] = "ToyModel_nextra_range_{:02}_" \
-                    "naive_{}".format(meta_parameters["n_extra_range"],
-                        meta_parameters["naive"])
+
+    if meta_parameters["norm_before"]:
+        meta_parameters["case"] = "ToyModel_nextra_range_{:02}_" \
+                        "naive_{}_norm_before_no_zscore_x_{}".format(meta_parameters["n_extra_range"],
+                            meta_parameters["naive"], meta_parameters["norm_before"])
+    else:
+        meta_parameters["case"] = "ToyModel_nextra_range_{:02}_" \
+                        "naive_{}".format(meta_parameters["n_extra_range"],
+                            meta_parameters["naive"])
     
     # number of rounds to use in the SNPE procedure
     meta_parameters["n_rd"] = nrd
@@ -148,14 +156,14 @@ if __name__ == "__main__":
     # choose the ground truth observation to consider in the inference
     ground_truth = get_ground_truth(meta_parameters, p_alpha=prior_theta, p_nextra=p_gt_nextra)
 
-    # choose how to get the summary features
+    # choose how to get the summary stats
     summary_net = IdentityToyModel()
 
     # choose a function which creates a neural network density estimator
     build_nn_posterior = partial(build_flow,
                                  embedding_net=summary_net,
                                  naive=args.naive, ## for now always True
-                                ) 
+                                 z_score_x=not meta_parameters["norm_before"]) 
 
     # decide whether to run inference or viz the results from previous runs
     if not args.viz:
@@ -175,6 +183,17 @@ if __name__ == "__main__":
             simulator, prior_theta, build_nn_posterior,
             meta_parameters, round_=args.round, ground_truth=ground_truth
         )
-        fig, ax = display_posterior(posterior, prior_theta)
-        # plt.show()
-        plt.savefig(f'pairplot_round{args.round}_nextra_range_{args.nextra_range}_gt_alpha_{args.alpha}_gt_beta_{args.beta}_gt_nextra_{args.gt_nextra}.png')
+
+        fig_1, ax, x_learned = display_posterior(posterior, prior_theta)
+        # plt.savefig(f'pairplot_round{args.round}_nextra_range_{args.nextra_range}_gt_alpha_{args.alpha}_gt_beta_{args.beta}_gt_nextra_{args.gt_nextra}.png')
+        # plt.close(fig_1)
+
+        fig_2, x_true, x_plot, y_plot = display_analytic_posterior(prior_theta, ground_truth)
+        # plt.savefig(f'analytic_pairplot_gt_nextra_{meta_parameters["gt_nextra"]}.png')
+
+        fig, ax = plot_2d_pdf_contours(x_true, x_learned, x_plot, y_plot)
+        plot_title = f'truevslearned_gt_nextra_{meta_parameters["gt_nextra"]}.png'
+        if meta_parameters["norm_before"]:
+            plot_title = f'truevslearned_gt_nextra_{meta_parameters["gt_nextra"]}_norm_before_{meta_parameters["norm_before"]}.png'
+
+        plt.savefig(plot_title)

@@ -54,11 +54,12 @@ class ToyModelFlow_naive_nflows_amortizeNextra(base.Distribution):
 
 
 def build_flow(batch_theta, batch_x, embedding_net=torch.nn.Identity(),
-               naive=True):
+               naive=True, z_score_x=False):
     if naive:
         flow = ToyModelFlow_naive_nflows_amortizeNextra(batch_theta,
                                          batch_x,
-                                         embedding_net)
+                                         embedding_net,
+                                         z_score_x=z_score_x)
     else:
         flow = None
 
