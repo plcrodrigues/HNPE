@@ -172,4 +172,4 @@ if __name__ == "__main__":
         )
         fig, ax = display_posterior(posterior, prior, ground_truth)
         # plt.show()
-        plt.savefig(f'pairplot_aeeg_round{args.round}_nextra{meta_parameters["n_extra"]}.png')
+        plt.savefig(f'pairplot_aeeg_round{args.round}_nextra{meta_parameters["n_extra"]}_subject_{args.sub_id}.png')
