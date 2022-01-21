@@ -19,7 +19,7 @@ class prior_ToyModel(BoxUniform):
         return BoxUniform(low=self.low[:1], high=self.high[:1])
 
 def simulator_ToyModel_amortizeNextra(theta, n_trials=1, p_alpha=None, p_nextra=None, gamma=1.0,
-                       sigma=0.0, ground_truth=False):
+                       sigma=0.0, ground_truth=False, aggregate_method=None):
 
     if theta.ndim == 1:
         return simulator_ToyModel_amortizeNextra(theta.view(1, -1), n_trials,
@@ -41,7 +41,7 @@ def simulator_ToyModel_amortizeNextra(theta, n_trials=1, p_alpha=None, p_nextra=
         x.append(torch.cat([x0_i, xn_i], dim=0))
 
     if (not ground_truth):
-        x = preprocess_for_amortizeNextra(x)
+        x = preprocess_for_amortizeNextra(x, aggregate_method)
     
     return x
 
@@ -61,15 +61,17 @@ def get_ground_truth(meta_parameters, p_alpha=None, p_nextra=None):
     # get the ground_truth observation data
     ground_truth = {}
     ground_truth["theta"] = meta_parameters["theta"].clone().detach()
-    ground_truth["observation"] = preprocess_for_amortizeNextra(observation)
+    ground_truth["observation"] = preprocess_for_amortizeNextra(observation, meta_parameters["aggregate_method"])
     ground_truth["extra_obs"] = observation[0][1:]
     return ground_truth
     
 def aggregate_extra_obs(xn, method='mean'):
     if method == 'mean':
         return xn.mean()
-    if method == 'max':
-        return max(xn)[0]
+    elif method is None:
+        return xn
+    else:
+        raise ValueError(f'Aggregation method "{method}" not implemented.')
     
 def preprocess_for_amortizeNextra(x, aggregate_method='mean'):
     x0 = torch.stack([x[i][0] for i in range(len(x))])
@@ -101,6 +103,7 @@ if __name__ == "__main__":
     meta_parameters["gamma"] = 1.0
     meta_parameters["noise"] = 0.0
     meta_parameters["nextra_range"] = 40
+    meta_parameters["aggregate_method"] = 'mean'
 
     nextra_probs = torch.ones(meta_parameters["nextra_range"])/meta_parameters["nextra_range"]
     prior_nextra = Categorical(nextra_probs)
@@ -114,7 +117,7 @@ if __name__ == "__main__":
 
     meta_parameters["n_trials"] = 1
     ground_truth = get_ground_truth(meta_parameters, prior, p_gt_nextra)
-    x = ground_truth['observation']
+    x = ground_truth['observation'][0]
     xn = ground_truth['extra_obs']
     print(x)
     print(xn)
@@ -127,7 +130,8 @@ if __name__ == "__main__":
                         p_alpha=prior,
                         p_nextra=prior_nextra,
                         gamma=meta_parameters["gamma"],
-                        sigma=meta_parameters["noise"])
+                        sigma=meta_parameters["noise"],
+                        aggregate_method=meta_parameters["aggregate_method"])
 
     x = simulator(theta)
     print(x[0].shape)

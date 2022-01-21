@@ -66,6 +66,8 @@ if __name__ == "__main__":
                         help='Aggregate the extra observations before training')
     parser.add_argument('--norm_before', action='store_true', 
                         help='Normalize data and groundtruth before training')
+    parser.add_argument('--aggregate_method', type=str, default='mean', choices=[None, 'mean'],
+                        help='Aggregation method for extra observations.')              
 
     args = parser.parse_args()
 
@@ -92,6 +94,8 @@ if __name__ == "__main__":
     ## ----------------------- added ----------------------------- ##
     # the range of values of how many extra observations to consider
     meta_parameters["n_extra_range"] = args.nextra_range
+    #aggregation method for extra observations 
+    meta_parameters["aggregate_method"] = args.aggregate_method
     ## ---------------------------------------------------------- ##
     # how many trials for each observation
     meta_parameters["n_trials"] = args.ntrials
@@ -114,12 +118,12 @@ if __name__ == "__main__":
 
     if meta_parameters["norm_before"]:
         meta_parameters["case"] = "ToyModel_nextra_range_{:02}_" \
-                        "naive_{}_norm_before_no_zscore_x_{}".format(meta_parameters["n_extra_range"],
-                            meta_parameters["naive"], meta_parameters["norm_before"])
+                        "naive_{}_aggregate_norm_before_no_zscore_x_{}".format(meta_parameters["n_extra_range"],
+                            meta_parameters["naive"], meta_parameters["aggregate_method"], meta_parameters["norm_before"])
     else:
         meta_parameters["case"] = "ToyModel_nextra_range_{:02}_" \
-                        "naive_{}".format(meta_parameters["n_extra_range"],
-                            meta_parameters["naive"])
+                        "naive_{}_aggregate_{}".format(meta_parameters["n_extra_range"],
+                            meta_parameters["naive"], meta_parameters["aggregate_method"])
     
     # number of rounds to use in the SNPE procedure
     meta_parameters["n_rd"] = nrd
@@ -151,7 +155,8 @@ if __name__ == "__main__":
                         p_alpha=prior_theta,
                         p_nextra=prior_nextra,
                         gamma=meta_parameters["gamma"],
-                        sigma=meta_parameters["noise"])
+                        sigma=meta_parameters["noise"],
+                        aggregate_method=meta_parameters["aggregate_method"])
 
     # choose the ground truth observation to consider in the inference
     ground_truth = get_ground_truth(meta_parameters, p_alpha=prior_theta, p_nextra=p_gt_nextra)
@@ -192,8 +197,8 @@ if __name__ == "__main__":
         # plt.savefig(f'analytic_pairplot_gt_nextra_{meta_parameters["gt_nextra"]}.png')
 
         fig, ax = plot_2d_pdf_contours(x_true, x_learned, x_plot, y_plot)
-        plot_title = f'truevslearned_gt_nextra_{meta_parameters["gt_nextra"]}.png'
+        plot_title = f'truevslearned_gt_nextra_{meta_parameters["gt_nextra"]}_aggregate_{meta_parameters["aggregate_method"]}.png'
         if meta_parameters["norm_before"]:
-            plot_title = f'truevslearned_gt_nextra_{meta_parameters["gt_nextra"]}_norm_before_{meta_parameters["norm_before"]}.png'
+            plot_title = f'truevslearned_gt_nextra_{meta_parameters["gt_nextra"]}_aggregate_{meta_parameters["aggregate_method"]}_norm_before_{meta_parameters["norm_before"]}.png'
 
         plt.savefig(plot_title)
