@@ -10,7 +10,10 @@ from torch.distributions import Categorical
 
 import submitit     
 
-LIST_NEXTRA_RANGE = [1,10,20,30,40]
+LIST_NEXTRA_RANGE = [40]
+LIST_NORM_BEFORE = [False]
+
+NSR = 10_000
 
 def get_executor_marg(job_name, timeout_hour=60, n_cpus=40):
 
@@ -27,12 +30,14 @@ def get_executor_marg(job_name, timeout_hour=60, n_cpus=40):
     )
     return executor
 
-def setup_inference(nextra_range, num_workers=20):
+def setup_inference(nextra_range, norm_before, num_workers=20):
        
     # setup the parameters for the example
     meta_parameters = {}
     # the range of values of how many extra observations to consider
     meta_parameters["nextra_range"] = nextra_range
+    #aggregation method for extra observations 
+    meta_parameters["aggregate_method"] = 'mean'
 
     # what kind of summary features to use
     meta_parameters["summary"] = 'Identity'
@@ -45,16 +50,18 @@ def setup_inference(nextra_range, num_workers=20):
     meta_parameters["naive"] = True
     # how many trials for each observation
     meta_parameters["n_trials"] = 1
-
+    # whether to normalize x0 and xn before training intead of 
+    # zscore on x0,nextra,xn during training 
+    meta_parameters["norm_before"] = norm_before
     # which example case we are considering here
-    meta_parameters["case"] = "ToyModel_nextra_range_{:02}_" \
-                    "naive_{}".format(meta_parameters["nextra_range"],
-                        meta_parameters["naive"])
+    meta_parameters["case"] = "Flow/2nd_run_ToyModel_nextra_range_{:02}_" \
+                    "naive_{}_aggregate_{}".format(meta_parameters["nextra_range"],
+                        meta_parameters["naive"], meta_parameters["aggregate_method"])
 
     # number of rounds to use in the SNPE procedure
     meta_parameters["n_rd"] = 1
     # number of simulations per round
-    meta_parameters["n_sr"] = 10_000
+    meta_parameters["n_sr"] = NSR
     # number of summary features to consider
     meta_parameters["n_sf"] = 1
 
@@ -78,7 +85,8 @@ def setup_inference(nextra_range, num_workers=20):
                         p_alpha=prior,
                         p_nextra=prior_nextra,
                         gamma=meta_parameters["gamma"],
-                        sigma=meta_parameters["noise"])                    
+                        sigma=meta_parameters["noise"],
+                        aggregate_method=meta_parameters["aggregate_method"])                    
 
     # choose how to get the summary features
     summary_net = IdentityToyModel()       
@@ -87,7 +95,7 @@ def setup_inference(nextra_range, num_workers=20):
     build_nn_posterior = partial(build_flow,
                                  embedding_net=summary_net,
                                  naive=meta_parameters["naive"], ## for now always True
-                                )  
+                                 z_score_x=not meta_parameters["norm_before"])  
 
     _ = run_inference(simulator=simulator, 
                     prior=prior, 
@@ -105,6 +113,7 @@ with executor.batch():
     print('Submitting jobs...', end='', flush=True)
     tasks = []   
     for nextra_range in LIST_NEXTRA_RANGE:
-        kwargs = {'nextra_range':nextra_range} 
-        tasks.append(executor.submit(setup_inference, **kwargs))  
+        for norm_before in LIST_NORM_BEFORE:
+            kwargs = {'nextra_range':nextra_range, 'norm_before':norm_before} 
+            tasks.append(executor.submit(setup_inference, **kwargs))  
              

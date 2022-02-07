@@ -12,11 +12,10 @@ from alphawaves_data import get_alphaeeg_observation
 
 import submitit
 
-LIST_TMIN = [0,2]
+LIST_SUBJECT = [13]
 
-LIST_SUBJECT = [0,1,2,3,4]
-
-LIST_CEVENT = [None, 'closed', 'open', 'all']         
+# LIST_CEVENT = [None, 'closed', 'open', 'all']         
+LIST_CEVENT = ['open']
 
 def get_executor_marg(job_name, timeout_hour=60, n_cpus=40):
 
@@ -44,8 +43,6 @@ def setup_inference(sub_id, c_event, num_workers=20):
     meta_parameters["n_extra"] = aeeg_observation.size(2) - 1
     # what kind of summary features to use
     meta_parameters["summary"] = 'Fourier'
-    # the parameters of the ground truth (observed data)
-    # meta_parameters["theta"] = torch.tensor(theta)
     # whether to do naive implementation
     meta_parameters["naive"] = False
 
