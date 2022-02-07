@@ -69,8 +69,6 @@ def simulator_ToyModel(theta, n_extra=0, n_trials=1, p_alpha=None, gamma=1.0,
     x0 = torch.tensor([x[i][0] for i in range(len(x))]).view(-1, n_trials, 1)
     if n_extra > 0:
         xn = torch.stack([torch.tensor(x[i][1:]).T for i in range(len(x))])
-        # aggregate before snpe to enable variable nextra between training and inference
-        # xn = xn.mean(dim=2)[:, None].view(-1, n_trials, 1)
         x = torch.cat([x0, xn], dim=2)
     else:
         x = x0
@@ -86,7 +84,7 @@ def get_ground_truth(meta_parameters, p_alpha=None, flatten=False):
 
     theta = meta_parameters["theta"].clone()
     observation = simulator_ToyModel(theta,
-                                     n_extra=meta_parameters["n_extra"], # change for experiments where nextra varies between inference and training 
+                                     n_extra=meta_parameters["n_extra"], 
                                      n_trials=meta_parameters["n_trials"],
                                      p_alpha=p_alpha,
                                      gamma=meta_parameters["gamma"],
@@ -131,11 +129,9 @@ if __name__ == "__main__":
     print(x.shape)
     x = x.mean(dim=1)
     print(x.shape)
-    print(x)
     xobs = x[:, 0][:, None]  # n_batch, n_embed
+    print(xobs.shape)
     xagg = x[:, 1:].mean(dim=1)[:, None]  # n_batch, n_embed
+    print(xagg.shape)
     x = torch.cat([xobs, xagg], dim=1)  # n_batch, 2*
     print(x.shape)
-    print(x)
-    n_trials = meta_parameters["n_trials"]
-    n_extra = meta_parameters["n_extra"]

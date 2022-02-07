@@ -117,12 +117,12 @@ if __name__ == "__main__":
 
     meta_parameters["n_trials"] = 1
     ground_truth = get_ground_truth(meta_parameters, prior, p_gt_nextra)
-    x = ground_truth['observation'][0]
+    x = ground_truth['observation']
     xn = ground_truth['extra_obs']
     print(x)
-    print(xn)
+    print(xn.shape)
 
-    theta = prior.sample((100,))
+    theta = prior.sample((100_000,))
 
     # choose how to setup the simulator
     simulator = partial(simulator_ToyModel_amortizeNextra,
@@ -134,5 +134,5 @@ if __name__ == "__main__":
                         aggregate_method=meta_parameters["aggregate_method"])
 
     x = simulator(theta)
-    print(x[0].shape)
+    print(x.shape)
     

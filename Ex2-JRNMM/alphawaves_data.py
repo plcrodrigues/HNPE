@@ -9,12 +9,28 @@ warnings.filterwarnings("ignore")
 def get_alphaeeg_observation(subject_id = 0, tmin=0.0, tmax=8.0, context_event=None):
     ''' Data consists of recordings taken from a public dataset (Cattan et al., 2018) 
     in which subjects were asked to keep their eyes open or closed during periods of 
-    8 s (sampling frequency of 128 Hz). For one subject there are ten epochs (5 open eyes 
-    events, 5 closed eyes events). We choose the observed signal x_0 to be in the closed 
-    eyes state. The other 9 time series define the context. We have used only the recordings 
-    from channel Oz because it is placed near the visual cortex and, therefore, is the most 
-    relevant channel for the analysis of the open and closed eyes conditions. The signals 
-    were filtered between 3 Hz and 40 Hz.
+    tmax-tmin = 8s (sampling frequency of 128 Hz). For one subject there are ten epochs 
+    (5 open eyes events, 5 closed eyes events). We choose the observed signal x_0 to be 
+    in the closed eyes state. The context data chosen amongst other 9 epochs according to 
+    the context_event variable (None, 'open', 'closed' or 'all') . We used solely the 
+    recordings from channel Oz because it is placed near the visual cortex and, therefore, 
+    is the most relevant channel for the analysis of the open and closed eyes conditions. 
+    The signals were filtered between 3 Hz and 40 Hz.
+
+    Parameters
+    ----------
+    subject_id : int between 0 and 18
+    tmin, tmax : float 
+        Start and end of the epochs.
+    context_event : Union[None, str]
+        Defines the events taken as extra observations in the context data.
+
+    Returns
+    -------
+    observation: ndarray, shape (1, n_time_stamps, 1+n_extra)
+        Ground-Truth observation with n_extra extra observations.
+        n_time_stamps = 128*(tmax-tmin)
+        n_extra = 0 (None), 4 (closed), 5 (open), 9 (all)
     '''
     # define the dataset instance
     dataset = AlphaWaves(useMontagePosition = False) # use useMontagePosition = False with recent mne versions

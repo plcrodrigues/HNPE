@@ -3,6 +3,7 @@ sbi-logs/
 results/
 figures/
 plots/
+work_inference/
 *.out
 *.err
 *.zip

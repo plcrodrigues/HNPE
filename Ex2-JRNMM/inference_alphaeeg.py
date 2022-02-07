@@ -18,10 +18,10 @@ Data consists of recordings taken from a public dataset (Cattan et al., 2018)
 in which subjects were asked to keep their eyes open or closed during periods of 
 8 s (sampling frequency of 128 Hz). For one subject we consider all ten time series
 (5 epochs correspond to open eyes events, the other 5 to closed eyes events). We choose
-the observed signal x_0 to be in the closed eyes state. The other 9 time series define 
+the observed signal x_0 to be in the closed eyes state. The other n_extra time series define 
 the context (that should share the same gain parameter regardless of eyes state). 
 We use the JRNMM-simulator to do the bayesian SBI, setting nextra to the number of 
-context signals (9) of the observed EEG. 
+context signals (0, 4, 5 or 9) of the observed EEG. 
 """
 
 if __name__ == "__main__":
@@ -29,22 +29,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description='Run inference on the Jansen-Rit neural mass model'
     )
-    # parser.add_argument('--C', type=float, default=135.0,
-    #                     help='Ground truth value for C.')
-    # parser.add_argument('--mu', type=float, default=220.0,
-    #                     help='Ground truth value for mu.')
-    # parser.add_argument('--sigma', type=float, default=2000.0,
-    #                     help='Ground truth value for sigma.')
-    # parser.add_argument('--gain', type=float, default=0.0,
-    #                     help='Ground truth value for gain.')
     parser.add_argument('--summary', '-s', type=str, default='Fourier',
                         help='Architecture used to compute summary features.')
     parser.add_argument('--viz', action='store_true',
                         help='Show results from previous run.')
     parser.add_argument('--round', '-r', type=int, default=0,
                         help='Show results from previous inference run.')
-    # parser.add_argument('--nextra', '-n', type=int, default=0,
-    #                     help='How many extra observations to consider.')
     parser.add_argument('--workers', '-w', type=int, default=1,
                         help='How many workers to use.')
     parser.add_argument('--dry', action='store_true',
@@ -80,9 +70,6 @@ if __name__ == "__main__":
     meta_parameters["n_extra"] = aeeg_observation.size(2) - 1  ##changed
     # what kind of summary features to use
     meta_parameters["summary"] = args.summary
-    # the parameters of the ground truth (observed data)
-    # theta = [args.C, args.mu, args.sigma, args.gain]
-    # meta_parameters["theta"] = torch.tensor(theta)
 
     # whether to do naive implementation
     naive = args.naive

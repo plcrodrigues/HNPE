@@ -18,11 +18,12 @@ class AggregateInstances(torch.nn.Module):
         super().__init__()
         self._aggregate = aggregate
 
-    def forward(self, x):
+    def forward(self, x): 
+        # x of shape (n_batch, n_extra+1)
         if self._aggregate:
-            xobs = x[:, 0][:, None]  # n_batch, n_embed
-            xagg = x[:, 1:].mean(dim=1)[:, None]  # n_batch, n_embed
-            x = torch.cat([xobs, xagg], dim=1)  # n_batch, 2*
+            xobs = x[:, 0][:, None]  # n_batch, 1
+            xagg = x[:, 1:].mean(dim=1)[:, None]  # n_batch, 1
+            x = torch.cat([xobs, xagg], dim=1)  # n_batch, 2
         return x
 
 class StandardizeAndAggregate(torch.nn.Module):
@@ -31,12 +32,13 @@ class StandardizeAndAggregate(torch.nn.Module):
         self.standardize_net = standardizing_net(x_ref.mean(dim=1))
         self.standardize = standardize
 
-    def forward(self, x):
+    def forward(self, x): 
+        # x of shape (n_batch, n_trials, n_extra+1)
         if self.standardize:
-            x = self.standardize_net(x.mean(dim=1))[:,:,None].permute(0,-1,1)
-        x0 = x[:,:,0][:,None].view(-1,1,1)
-        xn = x[:,:,1:].mean(dim=2)[:,None].view(-1,1,1)
-        x_agg = torch.cat([x0, xn], dim=2)
+            x = self.standardize_net(x.mean(dim=1))[:,:,None].permute(0,-1,1) # n_batch, n_trials, n_extra+1
+        x0 = x[:,:,0][:,None].view(-1,1,1) # n_batch, n_trials, 1
+        xn = x[:,:,1:].mean(dim=2)[:,None].view(-1,1,1) # n_batch, n_trials, 1
+        x_agg = torch.cat([x0, xn], dim=2) # n_batch, n_trials, 2
         return x_agg
 
 

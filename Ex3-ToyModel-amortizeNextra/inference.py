@@ -8,23 +8,35 @@ from hnpe.misc import make_label
 from hnpe.inference import run_inference
 
 from viz import get_posterior
-from viz import display_posterior, display_analytic_posterior, plot_2d_pdf_contours
+from viz import display_posterior
 from posterior import build_flow, IdentityToyModel
 from simulator import simulator_ToyModel_amortizeNextra, prior_ToyModel, get_ground_truth, preprocess_for_amortizeNextra
 
 from torch.distributions import Categorical
 
 """
-In this example, we consider the ToyModel setting in which the simulator has
+Context:
+In this example, we consider the Ex1-ToyModel setting in which the simulator has
 two input parameters [alpha, beta] and generates x = alpha * beta^gamma + eps,
 where gamma is a fixed known parameter of the simulator, and eps is a Gaussian
-white noise with standard deviation sigma. Because the observation is a product
-of two parameters, we may expect an indeterminacy when trying to estimate them
-from a given observation xo. To try and break this, we consider that each x0 is
+white noise with standard deviation sigma. We consider that each x0 is
 accompanied by a few other observations x1, ..., xN which all share the same
-parameter beta but with different values for alpha. Our goal then is to use
-this extra information to obtain the posterior distribution of
-p(alpha, beta | x0, x1, ..., xN)
+parameter beta but with different values for alpha. Our goal is to estimate
+the posterior distribution of p(alpha, beta | x0, x1, ..., xN) by training a 
+normalizing flow.
+
+Contribution:
+In Ex1-ToyModel the number n_extra of extra observations was fixed. We here implement 
+the amortized version, meaning that the flow is trained on different values of n_extra 
+at the same time (sampled from a uniform distribution in [0,N]). 
+The goal is to make inference on different n_extra values faster and easier. This 
+enables to analyse the influence of n_extra on the shape of the posterior in a more 
+straight-forward way (plot distance to dirac as a function of n_extra). 
+
+This could be interesting for real data for which we don't know in advance how many 
+extra observations we will be looking at).
+- 
+
 """
 
 if __name__ == "__main__":
@@ -83,7 +95,7 @@ if __name__ == "__main__":
         ## ------------ changed ----------------- ##
         nrd = 1 ## we use NPE not SNPE for amortization
         ## -------------------------------------- ##
-        nsr = 10_000
+        nsr = 100_000
         maxepochs = None
         saverounds = True
 
@@ -118,7 +130,7 @@ if __name__ == "__main__":
 
     if meta_parameters["norm_before"]:
         meta_parameters["case"] = "ToyModel_nextra_range_{:02}_" \
-                        "naive_{}_aggregate_norm_before_no_zscore_x_{}".format(meta_parameters["n_extra_range"],
+                        "naive_{}_aggregate_{}_norm_before_no_zscore_x_{}".format(meta_parameters["n_extra_range"],
                             meta_parameters["naive"], meta_parameters["aggregate_method"], meta_parameters["norm_before"])
     else:
         meta_parameters["case"] = "ToyModel_nextra_range_{:02}_" \
@@ -189,16 +201,7 @@ if __name__ == "__main__":
             meta_parameters, round_=args.round, ground_truth=ground_truth
         )
 
-        fig_1, ax, x_learned = display_posterior(posterior, prior_theta)
-        # plt.savefig(f'pairplot_round{args.round}_nextra_range_{args.nextra_range}_gt_alpha_{args.alpha}_gt_beta_{args.beta}_gt_nextra_{args.gt_nextra}.png')
-        # plt.close(fig_1)
+        fig_1, ax = display_posterior(posterior, prior_theta)
+        plt.savefig(f'pairplot_round{args.round}_nextra_range_{args.nextra_range}_gt_alpha_{args.alpha}_gt_beta_{args.beta}_gt_nextra_{args.gt_nextra}.png')
 
-        fig_2, x_true, x_plot, y_plot = display_analytic_posterior(prior_theta, ground_truth)
-        # plt.savefig(f'analytic_pairplot_gt_nextra_{meta_parameters["gt_nextra"]}.png')
 
-        fig, ax = plot_2d_pdf_contours(x_true, x_learned, x_plot, y_plot)
-        plot_title = f'truevslearned_gt_nextra_{meta_parameters["gt_nextra"]}_aggregate_{meta_parameters["aggregate_method"]}.png'
-        if meta_parameters["norm_before"]:
-            plot_title = f'truevslearned_gt_nextra_{meta_parameters["gt_nextra"]}_aggregate_{meta_parameters["aggregate_method"]}_norm_before_{meta_parameters["norm_before"]}.png'
-
-        plt.savefig(plot_title)

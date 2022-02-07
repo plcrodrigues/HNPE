@@ -63,7 +63,6 @@ def get_posterior(simulator, prior, build_nn_posterior, meta_parameters,
 def display_posterior(posterior, prior):
 
     n_samples = 100_000
-
     samples = posterior.sample((n_samples,), sample_with_mcmc=False)
 
     xlim = [[prior.support.base_constraint.lower_bound[i],

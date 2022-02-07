@@ -3,7 +3,6 @@ import torch
 # Imports for the SBI package
 from pyknos.nflows.distributions import base
 from sbi.utils.get_nn_models import build_nsf
-from sbi.utils.sbiutils import standardizing_net
 
 class IdentityToyModel(torch.nn.Module):
     def __init__(self):
