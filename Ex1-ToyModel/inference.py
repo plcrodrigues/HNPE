@@ -22,6 +22,15 @@ accompanied by a few other observations x1, ..., xN which all share the same
 parameter beta but with different values for alpha. Our goal then is to use
 this extra information to obtain the posterior distribution of
 p(alpha, beta | x0, x1, ..., xN)
+
+Changes from Julia Linhart: 
+The default method aggregates the extra observation using the `AggregateInstances` 
+module as part of the embedding network for the context of the considered flow. 
+Adding the commandline variable `--aggregate_before`, activates the method were the 
+extra observations are aggregated before defining / training the flow using the 
+`StandardizeAndAggregate` module as a preprocessing step. You can choose to normalize 
+the context data at this point instead of using the default zscoring of the sbi library 
+by adding the commandline variable `--norm_before`.
 """
 
 if __name__ == "__main__":
