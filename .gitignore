@@ -3,7 +3,8 @@ sbi-logs/
 results/
 figures/
 plots/
-script*.py
+script_margaret*.py
+script_margaret.py
 work_viz/
 work_inference/
 *.out
