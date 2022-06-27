@@ -6,12 +6,12 @@ import torch
 import warnings
 warnings.filterwarnings("ignore")
 
-def get_alphaeeg_observation(subject_id = 0, tmin=0.0, tmax=8.0, context_event=None):
+def get_alphaeeg_observation(subject_id = 0, tmin=0.0, tmax=8.0, gt_event='closed', context_event=None, same_nb_c_events=False):
     ''' Data consists of recordings taken from a public dataset (Cattan et al., 2018) 
     in which subjects were asked to keep their eyes open or closed during periods of 
     tmax-tmin = 8s (sampling frequency of 128 Hz). For one subject there are ten epochs 
-    (5 open eyes events, 5 closed eyes events). We choose the observed signal x_0 to be 
-    in the closed eyes state. The context data chosen amongst other 9 epochs according to 
+    (5 open eyes events, 5 closed eyes events). We can choose the observed signal x_0 to be 
+    in the closed or open eyes state . The context data chosen amongst other 9 epochs according to 
     the context_event variable (None, 'open', 'closed' or 'all') . We used solely the 
     recordings from channel Oz because it is placed near the visual cortex and, therefore, 
     is the most relevant channel for the analysis of the open and closed eyes conditions. 
@@ -22,6 +22,8 @@ def get_alphaeeg_observation(subject_id = 0, tmin=0.0, tmax=8.0, context_event=N
     subject_id : int between 0 and 18
     tmin, tmax : float 
         Start and end of the epochs.
+    gt_event : str
+        Defines the event chosen for the observed signal x_0.
     context_event : Union[None, str]
         Defines the events taken as extra observations in the context data.
 
@@ -57,7 +59,7 @@ def get_alphaeeg_observation(subject_id = 0, tmin=0.0, tmax=8.0, context_event=N
 
     # find first closed event
     i = 0
-    while(events[:,2][i] != 1):
+    while(events[:,2][i] != event_id[gt_event]):
         i += 1
     mask = np.array([i==k for k in range(len(events))])
 
@@ -69,9 +71,20 @@ def get_alphaeeg_observation(subject_id = 0, tmin=0.0, tmax=8.0, context_event=N
         context = epochs[~mask]
         if context_event != "all":
             context = context[context_event]
+            if same_nb_c_events and len(context) > 4:
+                context = context[:-1]
+        else:
+            if same_nb_c_events:
+                context = mne.concatenate_epochs([context['open'][:2], context['closed'][:2]])
+
         context = torch.FloatTensor(context.get_data()[:,0,:-1][:,:,None]).permute(2,1,0)  # all other events
+
 
         observation = torch.cat([x_0, context], dim=2)
 
     return observation
+
+if __name__ == "__main__":
+    observation = get_alphaeeg_observation(context_event='open', gt_event='closed', same_nb_c_events=True)
+    print(observation.shape)
     

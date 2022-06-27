@@ -59,7 +59,7 @@ class prior_JRNMM(BoxUniform):
 
 
 def simulator_JRNMM(theta, input_parameters, t_recording, n_extra=0,
-                    p_gain=None, n_time_samples=1024):  ## changed 
+                    p_gain=None, n_time_samples=1024, single_recording=False):  ## changed 
     """Define the simulator function
 
     Parameters
@@ -89,7 +89,8 @@ def simulator_JRNMM(theta, input_parameters, t_recording, n_extra=0,
                                t_recording,
                                n_extra,
                                p_gain,
-                               n_time_samples)  ## changed
+                               n_time_samples,
+                               single_recording)  ## changed
 
     x = []
     xextra = []
@@ -111,17 +112,20 @@ def simulator_JRNMM(theta, input_parameters, t_recording, n_extra=0,
 
         xextrai = []
         for _ in range(n_extra):
-
+            # sample extra observations from the same parameters as xi
             JRNMM_parameters_j = JRNMM_parameters.copy()
-            gainj = gaini
-            thetaj = p_gain.sample((1,)).view(-1)
-            thetaj = thetaj.detach().clone().cpu().numpy().astype(np.float64)
-            for i, p in enumerate(input_parameters):
-                if p == 'gain':
-                    JRNMM_parameters_j[p] = gainj
-                else:
-                    JRNMM_parameters_j[p] = thetaj[i]
 
+            # sample extra observations from different parameters than xi, but given the same gain
+            if not single_recording:
+                gainj = gaini
+                thetaj = p_gain.sample((1,)).view(-1)
+                thetaj = thetaj.detach().clone().cpu().numpy().astype(np.float64)
+                for i, p in enumerate(input_parameters):
+                    if p == 'gain':
+                        JRNMM_parameters_j[p] = gainj
+                    else:
+                        JRNMM_parameters_j[p] = thetaj[i]
+             
             xj = simulate_jansen_rit_StrangSplitting(
                 t_recording, JRNMM_parameters_j, n_time_samples  ## changed
             )
@@ -189,7 +193,7 @@ def simulate_jansen_rit_StrangSplitting(trecording, parameters, n_time_samples, 
     return X
 
 
-def get_ground_truth(meta_parameters, input_parameters, p_gain=None):
+def get_ground_truth(meta_parameters, input_parameters, p_gain=None, single_recording=False):
     "Take the parameters dict as input and output the observed data."
 
     # ground truth observation
@@ -198,7 +202,8 @@ def get_ground_truth(meta_parameters, input_parameters, p_gain=None):
         input_parameters=input_parameters,
         t_recording=meta_parameters["t_recording"],
         n_extra=meta_parameters["n_extra"], 
-        p_gain=p_gain
+        p_gain=p_gain,
+        single_recording=single_recording
     )
 
     # get the ground_truth observation data
@@ -212,37 +217,47 @@ def get_ground_truth(meta_parameters, input_parameters, p_gain=None):
 if __name__ == "__main__":
 
     meta_parameters = {}
-    meta_parameters["theta"] = torch.tensor([0.5, 0.5])
-    meta_parameters["n_extra"] = 7
+    meta_parameters["theta"] = torch.tensor([135, 220, 2000, 0])
+    meta_parameters["n_extra"] = 9
     meta_parameters["t_recording"] = 8
+    single_recording = False
     prior = prior_JRNMM(parameters=[('C', 10.0, 250.0),
-                                    ('gain', -10.0, +10.0)])
+                                    ('mu', 50.0, 500.0),
+                                    ('sigma', 100.0, 5000.0),
+                                    ('gain', -20.0, +20.0)])
     theta = prior.sample((1,))
     x = simulator_JRNMM(
-        theta, input_parameters=['C', 'gain'],
+        theta, input_parameters=['C', 'mu', 'sigma', 'gain'],
         t_recording=meta_parameters["t_recording"],
-        n_extra=meta_parameters["n_extra"], p_gain=prior
+        n_extra=meta_parameters["n_extra"], p_gain=prior,
+        single_recording=single_recording,
+        n_time_samples=1024
     )
 
     ## try aggregating before feeding to snpe to try different nextra between training and inference
-    from summary import summary_JRNMM
-    d_embedding=meta_parameters["n_sf"] = 33
-    n_time_samples=meta_parameters["n_ss"] = 1024
-    type_embedding=meta_parameters["summary"] = 'Fourier'
-    summary_extractor = summary_JRNMM(
-        n_extra=meta_parameters["n_extra"],
-        d_embedding=meta_parameters["n_sf"],
-        n_time_samples=meta_parameters["n_ss"],
-        type_embedding=meta_parameters["summary"])
+    # from summary import summary_JRNMM
+    # d_embedding=meta_parameters["n_sf"] = 33
+    # n_time_samples=meta_parameters["n_ss"] = 256
+    # type_embedding=meta_parameters["summary"] = 'Fourier'
+    # summary_extractor = summary_JRNMM(
+    #     n_extra=meta_parameters["n_extra"],
+    #     d_embedding=meta_parameters["n_sf"],
+    #     n_time_samples=meta_parameters["n_ss"],
+    #     type_embedding=meta_parameters["summary"])
 
-    # let's use the log power spectral density instead
-    summary_extractor.embedding.net.logscale = True
-    x = summary_extractor(x) # n_batch, n_embed, 1+nextra
-    print(x.shape)
-    xobs = x[:, :, 0][:,None].view(-1,d_embedding,1)  # n_batch, n_embed, 1
-    print(xobs.shape)
-    xagg = x[:, :, 1:].mean(dim=2)[:,None].view(-1,d_embedding,1)  # n_batch, n_embed, 1
-    print(xagg.shape)
-    x = torch.cat([xobs, xagg], dim=2)  # n_batch, n_embed, 2
+    # # let's use the log power spectral density instead
+    # summary_extractor.embedding.net.logscale = True
+    # x = summary_extractor(x) # n_batch, n_embed, 1+nextra
+    # print(x.shape)
+    # xobs = x[:, :, 0][:,None].view(-1,d_embedding,1)  # n_batch, n_embed, 1
+    # print(xobs.shape)
+    # xagg = x[:, :, 1:].mean(dim=2)[:,None].view(-1,d_embedding,1)  # n_batch, n_embed, 1
+    # print(xagg.shape)
+    # x = torch.cat([xobs, xagg], dim=2)  # n_batch, n_embed, 2
 
-    print(x.shape)
+    ground_truth = get_ground_truth(meta_parameters,
+                                input_parameters=['C', 'mu', 'sigma', 'gain'],
+                                p_gain=prior, single_recording=single_recording)
+
+    print(ground_truth['observation'].shape)
+    print(ground_truth['observation'][:,:,0].shape)

@@ -80,12 +80,14 @@ if __name__ == "__main__":
     meta_parameters["naive"] = naive
 
     # which example case we are considering here
-    meta_parameters["case"] = "JRNMM_nextra_{:02}_" \
+    meta_parameters["case"] = "sim_groundtruth/diff_trec_nextra/JRNMM_nextra_{:02}_" \
+        "trec_{}"\
         "naive_{}_" \
         "C_{:.2f}_" \
         "mu_{:.2f}_" \
         "sigma_{:.2f}_" \
         "gain_{:.2f}".format(meta_parameters["n_extra"],
+                             args.trecording,
                              meta_parameters["naive"],
                              meta_parameters["theta"][0],
                              meta_parameters["theta"][1],
@@ -169,5 +171,15 @@ if __name__ == "__main__":
             meta_parameters, round_=args.round
         )
         fig, ax = display_posterior(posterior, prior, ground_truth)
-        # plt.show()
+
         plt.savefig(f'pairplot_round{args.round}_nextra{meta_parameters["n_extra"]}.png')
+
+        from eval_sim import plot_pairgrid_with_groundtruth
+        theta_gt = list(meta_parameters['theta'].numpy())
+        posteriors = {'learned posterior': posterior, 'prior':prior}
+        g = plot_pairgrid_with_groundtruth(posteriors, theta_gt)
+
+        plt.savefig(f'pairgrid_round{args.round}_nextra{meta_parameters["n_extra"]}.png')
+        
+
+        

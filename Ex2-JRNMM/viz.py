@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+from sklearn.utils import column_or_1d
 import torch
 
 from sbi import utils as sbi_utils
@@ -52,4 +53,6 @@ def display_posterior(posterior, prior, ground_truth):
     else:
         fig, ax = sbi_utils.pairplot(samples, limits=xlim)
     # plt.show()
+
     return fig, ax
+
